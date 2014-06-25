@@ -1,0 +1,9 @@
+[package]
+name = "rduperemove"
+version = "0.0.1"
+
+authors = ["Renato Zannon <renato@rrsz.com>"]
+
+[[bin]]
+name = "rduperemove"
+path = "src/main.rs"
