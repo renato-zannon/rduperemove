@@ -3,7 +3,7 @@ rduperemove
 
 An experiment at implementing a [Btrfs](http://btrfs.wiki.kernel.org/) deduplication tool using Rust.
 
-This is work-in-progress, and **NOT** ready for production use. It won't destroy or corrupt data (the kernel won't allow it), but I won't guarantee it will have the undesired side-effects (such as unlinking already-deduped data).
+This is work-in-progress, and **NOT** ready for production use. It won't destroy or corrupt data (the kernel won't allow it), but I won't guarantee it won't have undesired side-effects (such as unlinking already-deduped data).
 
 ## Goals
 
