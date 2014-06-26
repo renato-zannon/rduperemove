@@ -2,16 +2,16 @@ use std::collections::{HashMap, PriorityQueue};
 use std::io::{TypeFile, IoResult, IoError};
 use std::{vec, io, iter};
 
-pub struct DuplicateCheck {
-    min_size:    uint,
-    size_groups: HashMap<uint, Vec<Path>>
+pub struct SizeCheck {
+    min_size: uint,
+    groups:   HashMap<uint, Vec<Path>>
 }
 
-pub fn new_check(min_size: uint) -> DuplicateCheck {
-    DuplicateCheck { size_groups: HashMap::new(), min_size: min_size }
+pub fn new_check(min_size: uint) -> SizeCheck {
+    SizeCheck { groups: HashMap::new(), min_size: min_size }
 }
 
-impl DuplicateCheck {
+impl SizeCheck {
     #[must_use]
     pub fn add_base_dir(&mut self, dir: &Path, on_err: |IoError|) -> IoResult<()> {
         for file in try!(recurse_directory(dir)) {
@@ -19,7 +19,7 @@ impl DuplicateCheck {
                 Ok(SizedFile { path: path, size: size }) => {
                     if size < self.min_size { continue; }
 
-                    let paths = self.size_groups.find_or_insert_with(size, |_| {
+                    let paths = self.groups.find_or_insert_with(size, |_| {
                         Vec::new()
                     });
 
@@ -35,25 +35,25 @@ impl DuplicateCheck {
         Ok(())
     }
 
-    pub fn duplicates(self) -> Duplicates {
-        let sizes = self.size_groups.keys()
+    pub fn size_groups(self) -> SizeGroups {
+        let sizes = self.groups.keys()
             .map(|n| *n)
             .collect::<PriorityQueue<uint>>()
             .into_sorted_vec();
 
-        Duplicates {
+        SizeGroups {
             sorted_sizes_iter: sizes.move_iter().rev(),
-            size_groups: self.size_groups,
+            size_groups: self.groups,
         }
     }
 }
 
-pub struct Duplicates {
+pub struct SizeGroups {
     sorted_sizes_iter: iter::Rev<vec::MoveItems<uint>>,
     size_groups: HashMap<uint, Vec<Path>>
 }
 
-impl<'a> Iterator<(uint, Vec<Path>)> for Duplicates {
+impl<'a> Iterator<(uint, Vec<Path>)> for SizeGroups {
     fn next(&mut self) -> Option<(uint, Vec<Path>)> {
         for size in self.sorted_sizes_iter {
             let paths = self.size_groups.pop(&size).unwrap();

@@ -6,7 +6,7 @@ use std::collections::HashMap;
 #[allow(dead_code)]
 mod gcrypt;
 mod filehasher;
-mod duplicates;
+mod size_check;
 mod btrfs;
 
 static BUFFER_SIZE:  uint = 64 * 1024;
@@ -17,7 +17,7 @@ static MIN_FILE_SIZE: uint = 4 * 1024;
 fn main() {
     gcrypt::init();
 
-    let mut check = duplicates::new_check(MIN_FILE_SIZE);
+    let mut check = size_check::new_check(MIN_FILE_SIZE);
     for base_dir in std::os::args().move_iter().skip(1) {
         let mut stderr = stdio::stderr();
 
@@ -31,7 +31,7 @@ fn main() {
     let mut buckets = Vec::from_fn(WORKER_COUNT, |_|  Vec::new());
 
     let mut worker_index = 0;
-    for (_, paths) in check.duplicates() {
+    for (_, paths) in check.size_groups() {
         buckets.get_mut(worker_index).push(paths);
         worker_index = (worker_index + 1) % WORKER_COUNT;
     }
