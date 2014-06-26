@@ -1,4 +1,4 @@
-use std::collections::{HashMap, PriorityQueue};
+use std::collections::{HashMap, HashSet, PriorityQueue};
 use std::io::{TypeFile, IoResult, IoError};
 use std::{vec, io, iter};
 
@@ -57,14 +57,29 @@ impl<'a> Iterator<Vec<Path>> for SizeGroups {
     fn next(&mut self) -> Option<Vec<Path>> {
         for size in self.sorted_sizes_iter {
             let paths = self.size_groups.pop(&size).unwrap();
+            let unique_paths = remove_repeated_inodes(paths);
 
-            if paths.len() > 1 {
-                return Some(paths);
+            if unique_paths.len() > 1 {
+                return Some(unique_paths);
             }
         }
 
         None
     }
+}
+
+fn remove_repeated_inodes(mut paths: Vec<Path>) -> Vec<Path> {
+    let mut found = HashSet::with_capacity(paths.len());
+
+    paths.retain(|path| {
+        let stat = path.lstat().unwrap();
+        let inode = stat.unstable.inode;
+
+        // insert returns false if the value was already on the set
+        found.insert(inode)
+    });
+
+    paths
 }
 
 fn recurse_directory(dir: &Path) -> IoResult<FilesBelow> {
