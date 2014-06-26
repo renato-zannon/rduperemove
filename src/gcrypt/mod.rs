@@ -90,21 +90,13 @@ pub fn hex_digest<C: BytesContainer>(message: C, algo: GcryptMdAlgo) -> String {
 }
 
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
-    use std::{str, u8};
+    use std::io::MemWriter;
 
-    let mut string = String::with_capacity(bytes.len() * 2);
+    let mut writer = MemWriter::with_capacity(bytes.len() * 2);
 
     for &number in bytes.iter() {
-        u8::to_str_bytes(number, 16, |bytes| {
-            let slice = str::from_utf8(bytes).unwrap();
-
-            if slice.len() == 1 {
-                string.push_str("0");
-            }
-
-            string.push_str(slice);
-        });
+        (write!(&mut writer, "{:02x}", number)).unwrap();
     }
 
-    string
+    String::from_utf8(writer.unwrap()).unwrap()
 }
