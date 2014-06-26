@@ -75,8 +75,6 @@ pub struct btrfs_ioctl_same_extent_info {
 }
 
 pub struct ExtentSame<'a> {
-    allocation: *mut u8,
-
     pub args:  &'a mut btrfs_ioctl_same_args,
     pub infos: &'a mut [btrfs_ioctl_same_extent_info],
 }
@@ -113,10 +111,12 @@ impl<'a> ExtentSame<'a> {
                     data: infos_ptr as *btrfs_ioctl_same_extent_info,
                     len: info_count
                 }),
-
-                allocation: allocation,
             }
         }
+    }
+
+    fn allocation(&mut self) -> *mut u8 {
+        (self.args as *mut btrfs_ioctl_same_args) as *mut u8
     }
 
     fn allocation_size(&self) -> uint {
@@ -138,7 +138,7 @@ impl<'a> Drop for ExtentSame<'a> {
     fn drop(&mut self) {
         unsafe {
             heap::deallocate(
-                self.allocation,
+                self.allocation(),
                 self.allocation_size(),
                 mem::min_align_of::<btrfs_ioctl_same_args>(),
             );
