@@ -43,26 +43,23 @@ pub unsafe fn btrfs_extent_same(fd: c_int, same: &mut btrfs_ioctl_same_args) -> 
     let btrfs_ioc_file_extent_same = iowr!(
         BTRFS_IOCTL_MAGIC,
         54,
-        mem::size_of::<btrfs_ioctl_same_args>() /* -
-            mem::size_of::<*mut btrfs_ioctl_same_extent_info>() */
+        mem::size_of::<btrfs_ioctl_same_args>()
     );
 
     ioctl(fd as c_int, btrfs_ioc_file_extent_same as c_int, same) as int
 }
 
 #[repr(C)]
-#[deriving(Show)]
 pub struct btrfs_ioctl_same_args {
 	pub logical_offset: u64,  /* in - start of extent in source */
 	pub length:         u64,  /* in - length of extent */
 	pub dest_count:     u16,  /* in - total elements in info array */
-	pub _reserved1:     u16,
-	pub _reserved2:     u32,
-    // pub info:           *mut btrfs_ioctl_same_extent_info,
+	_reserved1:         u16,
+	_reserved2:         u32,
+  info:               [btrfs_ioctl_same_extent_info, ..0],
 }
 
 #[repr(C)]
-#[deriving(Show)]
 pub struct btrfs_ioctl_same_extent_info {
 	pub fd: i64,		          /* in - destination file */
 	pub logical_offset: u64,	/* in - start of extent in destination */
@@ -77,7 +74,6 @@ pub struct btrfs_ioctl_same_extent_info {
 	pub reserved: u32,
 }
 
-#[deriving(Show)]
 pub struct ExtentSame<'a> {
     allocation: *mut u8,
     allocation_size: uint,
@@ -107,6 +103,7 @@ impl<'a> ExtentSame<'a> {
                 dest_count:     info_count as u16,
                 _reserved1:     0,
                 _reserved2:     0,
+                info:          [],
             });
 
             ptr::zero_memory(infos_ptr, info_count);
