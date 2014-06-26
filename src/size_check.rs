@@ -53,13 +53,13 @@ pub struct SizeGroups {
     size_groups: HashMap<uint, Vec<Path>>
 }
 
-impl<'a> Iterator<(uint, Vec<Path>)> for SizeGroups {
-    fn next(&mut self) -> Option<(uint, Vec<Path>)> {
+impl<'a> Iterator<Vec<Path>> for SizeGroups {
+    fn next(&mut self) -> Option<Vec<Path>> {
         for size in self.sorted_sizes_iter {
             let paths = self.size_groups.pop(&size).unwrap();
 
             if paths.len() > 1 {
-                return Some((size, paths));
+                return Some(paths);
             }
         }
 
