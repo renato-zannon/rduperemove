@@ -11,10 +11,10 @@ static IOC_NRBITS:   i32 = 8;
 static IOC_TYPEBITS: i32 = 8;
 static IOC_SIZEBITS: i32 = 14;
 
-static IOC_NRSHIFT:   i32 = 0;
-static IOC_TYPESHIFT: i32 = IOC_NRSHIFT   + IOC_NRBITS;
-static IOC_SIZESHIFT: i32 = IOC_TYPESHIFT + IOC_TYPEBITS;
-static IOC_DIRSHIFT:  i32 = IOC_SIZESHIFT + IOC_SIZEBITS;
+static IOC_NRSHIFT:   uint = 0;
+static IOC_TYPESHIFT: uint = IOC_NRSHIFT   + IOC_NRBITS   as uint;
+static IOC_SIZESHIFT: uint = IOC_TYPESHIFT + IOC_TYPEBITS as uint;
+static IOC_DIRSHIFT:  uint = IOC_SIZESHIFT + IOC_SIZEBITS as uint;
 
 #[link(name = "c")]
 extern "C" {
