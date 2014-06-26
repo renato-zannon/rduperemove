@@ -51,27 +51,27 @@ pub unsafe fn btrfs_extent_same(fd: c_int, same: &mut btrfs_ioctl_same_args) -> 
 
 #[repr(C)]
 pub struct btrfs_ioctl_same_args {
-	pub logical_offset: u64,  /* in - start of extent in source */
-	pub length:         u64,  /* in - length of extent */
-	pub dest_count:     u16,  /* in - total elements in info array */
-	_reserved1:         u16,
-	_reserved2:         u32,
-  info:               [btrfs_ioctl_same_extent_info, ..0],
+    pub logical_offset: u64,  /* in - start of extent in source */
+    pub length:         u64,  /* in - length of extent */
+    pub dest_count:     u16,  /* in - total elements in info array */
+    _reserved1:         u16,
+    _reserved2:         u32,
+    info:               [btrfs_ioctl_same_extent_info, ..0],
 }
 
 #[repr(C)]
 pub struct btrfs_ioctl_same_extent_info {
-	pub fd: i64,		          /* in - destination file */
-	pub logical_offset: u64,	/* in - start of extent in destination */
-    pub bytes_deduped:  u64,	/* out - total # of bytes we were able to dedupe from this file */
+    pub fd: i64,             /* in - destination file */
+    pub logical_offset: u64, /* in - start of extent in destination */
+    pub bytes_deduped:  u64, /* out - total # of bytes we were able to dedupe from this file */
 
-	/* status of this dedupe operation:
-	 * 0 if dedup succeeds
-	 * < 0 for error
-	 * == BTRFS_SAME_DATA_DIFFERS if data differs
-	 */
-	pub status: i32,		/* out - see above description */
-	pub reserved: u32,
+    /* status of this dedupe operation:
+     * 0 if dedup succeeds
+     * < 0 for error
+     * == BTRFS_SAME_DATA_DIFFERS if data differs
+     */
+    pub status: i32, /* out - see above description */
+    pub reserved: u32,
 }
 
 pub struct ExtentSame<'a> {
