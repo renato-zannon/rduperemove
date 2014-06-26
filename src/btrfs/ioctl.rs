@@ -43,7 +43,7 @@ pub unsafe fn btrfs_extent_same(fd: c_int, same: &mut btrfs_ioctl_same_args) -> 
     let btrfs_ioc_file_extent_same = iowr!(
         BTRFS_IOCTL_MAGIC,
         54,
-        mem::size_of::<btrfs_ioctl_same_args>()
+        ExtentSame::args_size()
     );
 
     ioctl(fd as c_int, btrfs_ioc_file_extent_same as c_int, same) as int
@@ -76,7 +76,6 @@ pub struct btrfs_ioctl_same_extent_info {
 
 pub struct ExtentSame<'a> {
     allocation: *mut u8,
-    allocation_size: uint,
 
     pub args:  &'a mut btrfs_ioctl_same_args,
     pub infos: &'a mut [btrfs_ioctl_same_extent_info],
@@ -116,9 +115,13 @@ impl<'a> ExtentSame<'a> {
                 }),
 
                 allocation: allocation,
-                allocation_size: allocation_size,
             }
         }
+    }
+
+    fn allocation_size(&self) -> uint {
+        ExtentSame::args_size() +
+            ExtentSame::infos_size(self.args.length as uint)
     }
 
     fn args_size() -> uint {
@@ -136,7 +139,7 @@ impl<'a> Drop for ExtentSame<'a> {
         unsafe {
             heap::deallocate(
                 self.allocation,
-                self.allocation_size,
+                self.allocation_size(),
                 mem::min_align_of::<btrfs_ioctl_same_args>(),
             );
         }
