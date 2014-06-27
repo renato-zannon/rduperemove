@@ -1,6 +1,7 @@
 use filehasher;
 use std::collections::HashMap;
 use std::io::File;
+use std::sync::Future;
 
 static BUFFER_SIZE:  uint = 64 * 1024;
 
@@ -28,18 +29,8 @@ pub fn spawn_workers<T: Iterator<Vec<Path>> + Send>(count: uint, groups: T) -> R
 }
 
 fn worker(rx: Receiver<Vec<Path>>, tx: Sender<Vec<Path>>) {
-    let mut hasher = filehasher::new(BUFFER_SIZE);
-
     for paths in rx.iter() {
-        let mut paths_by_digest = HashMap::with_capacity(paths.len());
-
-        for path in paths.move_iter() {
-            let file   = File::open(&path).unwrap();
-            let digest = hasher.hash_whole_file(file);
-
-            let dupes = paths_by_digest.find_or_insert_with(digest, |_| vec!());
-            dupes.push(path);
-        }
+        let paths_by_digest = digest_files(paths);
 
         for (_, paths) in paths_by_digest.move_iter() {
             if paths.len() > 1 {
@@ -47,4 +38,26 @@ fn worker(rx: Receiver<Vec<Path>>, tx: Sender<Vec<Path>>) {
             }
         }
     }
+}
+
+fn digest_files(paths: Vec<Path>) -> HashMap<Vec<u8>, Vec<Path>> {
+    let mut paths_by_digest = HashMap::with_capacity(paths.len());
+
+    let future_digests = paths.move_iter().map(|path| {
+        Future::spawn(proc() {
+            let mut hasher = filehasher::new(BUFFER_SIZE);
+
+            let file = File::open(&path).unwrap();
+            (path, hasher.hash_whole_file(file))
+        })
+    }).collect::<Vec<Future<_>>>();
+
+    for future in future_digests.move_iter() {
+        let (path, digest): (Path, Vec<u8>) = future.unwrap();
+
+        let dupes = paths_by_digest.find_or_insert_with(digest, |_| vec!());
+        dupes.push(path);
+    }
+
+    paths_by_digest
 }
