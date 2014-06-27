@@ -4,23 +4,25 @@ use std::io::File;
 
 static BUFFER_SIZE:  uint = 64 * 1024;
 
-pub fn spawn_workers<T: Iterator<Vec<Path>>>(count: uint, groups: T) -> Receiver<Vec<Path>> {
+pub fn spawn_workers<T: Iterator<Vec<Path>> + Send>(count: uint, groups: T) -> Receiver<Vec<Path>> {
     let (results_tx, results_rx) = channel();
 
-    let workers_txs = Vec::from_fn(count, |_| {
-        let (worker_tx, worker_rx) = channel();
+    spawn(proc() {
+        let workers_txs = Vec::from_fn(count, |_| {
+            let (worker_tx, worker_rx) = channel();
 
-        let worker_results_tx = results_tx.clone();
-        spawn(proc() worker(worker_rx, worker_results_tx));
+            let worker_results_tx = results_tx.clone();
+            spawn(proc() worker(worker_rx, worker_results_tx));
 
-        worker_tx
+            worker_tx
+        });
+
+        let workers_cycle = workers_txs.iter().cycle();
+
+        for (size_group, worker_tx) in groups.zip(workers_cycle) {
+            worker_tx.send(size_group);
+        }
     });
-
-    let workers_cycle = workers_txs.iter().cycle();
-
-    for (size_group, worker_tx) in groups.zip(workers_cycle) {
-        worker_tx.send(size_group);
-    }
 
     results_rx
 }
