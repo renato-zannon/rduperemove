@@ -25,10 +25,10 @@ fn main() {
         }
 
         let source = paths.pop().unwrap();
-        let dedup  = btrfs::new_dedup(source, paths.as_slice());
-        drop(paths);
 
+        let dedup  = btrfs::new_dedup(source, paths.as_slice());
         let deduped = dedup.perform();
+
         println!("Deduped {} bytes\n", deduped);
     }
 }

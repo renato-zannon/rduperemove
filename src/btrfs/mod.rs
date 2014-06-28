@@ -7,19 +7,19 @@ use std::rt::rtio::RtioFileStream;
 #[allow(non_camel_case_types)]
 mod ioctl;
 
-pub struct Dedup {
+pub struct Dedup<'a> {
     source: Path,
-    destinations: Vec<Path>
+    destinations: &'a [Path]
 }
 
-pub fn new_dedup(source: Path, destinations: &[Path]) -> Dedup {
+pub fn new_dedup<'a>(source: Path, destinations: &'a [Path]) -> Dedup<'a> {
     Dedup {
         source: source,
-        destinations: Vec::from_slice(destinations)
+        destinations: destinations
     }
 }
 
-impl Dedup {
+impl<'a> Dedup<'a> {
     pub fn perform(self) -> uint {
         let mut source_fd = {
             let source = self.source.to_c_str();
@@ -30,7 +30,7 @@ impl Dedup {
         };
 
         let dest_count = self.destinations.len();
-        let dest_fds = self.destinations.move_iter().filter_map(|dest_path| {
+        let dest_fds = self.destinations.iter().filter_map(|dest_path| {
             let dest = dest_path.to_c_str();
             file::open(&dest, rtio::Open, rtio::ReadWrite).ok()
         }).collect::<Vec<file::FileDesc>>();
