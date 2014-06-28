@@ -1,10 +1,10 @@
 use std::collections::{HashMap, HashSet, PriorityQueue};
-use std::io::{TypeFile, IoResult, IoError};
+use std::io::{TypeFile, IoResult, IoError, FileStat};
 use std::{vec, io, iter};
 
 pub struct SizeCheck {
     min_size: uint,
-    groups:   HashMap<uint, Vec<Path>>
+    groups:   HashMap<uint, Vec<StatedPath>>
 }
 
 pub fn new_check(min_size: uint) -> SizeCheck {
@@ -16,14 +16,16 @@ impl SizeCheck {
     pub fn add_base_dir(&mut self, dir: &Path, on_err: |IoError|) -> IoResult<()> {
         for file in try!(recurse_directory(dir)) {
             match file {
-                Ok(SizedFile { path: path, size: size }) => {
+                Ok(stated_path) => {
+                    let size = stated_path.stat.size as uint;
+
                     if size < self.min_size { continue; }
 
                     let paths = self.groups.find_or_insert_with(size, |_| {
                         Vec::new()
                     });
 
-                    paths.push(path);
+                    paths.push(stated_path);
                 },
 
                 Err(err) => {
@@ -50,36 +52,39 @@ impl SizeCheck {
 
 pub struct SizeGroups {
     sorted_sizes_iter: iter::Rev<vec::MoveItems<uint>>,
-    size_groups: HashMap<uint, Vec<Path>>
+    size_groups: HashMap<uint, Vec<StatedPath>>
 }
 
 impl<'a> Iterator<Vec<Path>> for SizeGroups {
     fn next(&mut self) -> Option<Vec<Path>> {
         for size in self.sorted_sizes_iter {
-            let paths = self.size_groups.pop(&size).unwrap();
-            let unique_paths = remove_repeated_inodes(paths);
+            let stated_paths = self.size_groups.pop(&size).unwrap();
+            let unique_stated_paths = remove_repeated_inodes(stated_paths);
 
-            if unique_paths.len() > 1 {
-                return Some(unique_paths);
-            }
+            if unique_stated_paths.len() < 2 { continue; }
+
+            let unique_paths = unique_stated_paths.move_iter().map(|stated_path| {
+                stated_path.path
+            }).collect();
+
+            return Some(unique_paths);
         }
 
         None
     }
 }
 
-fn remove_repeated_inodes(mut paths: Vec<Path>) -> Vec<Path> {
-    let mut found = HashSet::with_capacity(paths.len());
+fn remove_repeated_inodes(mut stated_paths: Vec<StatedPath>) -> Vec<StatedPath> {
+    let mut found = HashSet::with_capacity(stated_paths.len());
 
-    paths.retain(|path| {
-        let stat = path.lstat().unwrap();
-        let inode = stat.unstable.inode;
+    stated_paths.retain(|path| {
+        let inode = path.stat.unstable.inode;
 
         // insert returns false if the value was already on the set
         found.insert(inode)
     });
 
-    paths
+    stated_paths
 }
 
 fn recurse_directory(dir: &Path) -> IoResult<FilesBelow> {
@@ -101,13 +106,13 @@ struct FilesBelow {
     stack: Vec<Path>,
 }
 
-struct SizedFile {
+struct StatedPath {
     path: Path,
-    size: uint,
+    stat: FileStat,
 }
 
-impl<'a> Iterator<IoResult<SizedFile>> for FilesBelow {
-    fn next(&mut self) -> Option<IoResult<SizedFile>> {
+impl<'a> Iterator<IoResult<StatedPath>> for FilesBelow {
+    fn next(&mut self) -> Option<IoResult<StatedPath>> {
         use std::io::fs;
 
         loop {
@@ -133,7 +138,12 @@ impl<'a> Iterator<IoResult<SizedFile>> for FilesBelow {
                 },
 
                 io::TypeFile => {
-                    return Some(Ok(SizedFile { path: current, size: stat.size as uint }));
+                    let stated_path = StatedPath {
+                        path: current,
+                        stat: stat,
+                    };
+
+                    return Some(Ok(stated_path));
                 },
 
                 _ => continue,
