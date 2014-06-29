@@ -106,14 +106,14 @@ pub type gcrypt_md_handle = *mut u8;
 
 #[link(name = "gcrypt")]
 extern "C" {
-    pub fn gcry_check_version(req_version: *c_char) -> *c_char;
+    pub fn gcry_check_version(req_version: *const c_char) -> *mut c_char;
     pub fn gcry_control(cmd: GcryCtlCmd, ...) -> c_uint;
     pub fn gcry_md_open(h: *mut gcrypt_md_handle, algo: GcryptMdAlgo, flags: c_uint) -> c_uint;
-    pub fn gcry_md_write(h: gcrypt_md_handle, buffer: *c_void, length: size_t) -> c_uint;
-    pub fn gcry_md_read(h: gcrypt_md_handle, algo: GcryptMdAlgo) -> *c_uchar;
+    pub fn gcry_md_write(h: gcrypt_md_handle, buffer: *const c_void, length: size_t) -> c_uint;
+    pub fn gcry_md_read(h: gcrypt_md_handle, algo: GcryptMdAlgo) -> *mut c_uchar;
     pub fn gcry_md_close(h: gcrypt_md_handle);
     pub fn gcry_md_get_algo_dlen(algo: GcryptMdAlgo) -> c_int;
-    pub fn gcry_md_hash_buffer(algo: GcryptMdAlgo, digest: *mut c_void, buffer: *c_void, length: size_t);
+    pub fn gcry_md_hash_buffer(algo: GcryptMdAlgo, digest: *mut c_void, buffer: *const c_void, length: size_t);
 }
 
 struct GcryptThreadCbs { option: c_uint }
@@ -128,7 +128,7 @@ static gcry_threads_pth: GcryptThreadCbs = GcryptThreadCbs {
 
 pub fn init() {
     unsafe {
-        gcry_control(GCRYCTL_SET_THREAD_CBS, (&gcry_threads_pthread) as *GcryptThreadCbs);
+        gcry_control(GCRYCTL_SET_THREAD_CBS, (&gcry_threads_pthread) as *const GcryptThreadCbs);
 
         GCRYPT_VERSION.with_c_str(|c_str| {
             gcry_check_version(c_str);

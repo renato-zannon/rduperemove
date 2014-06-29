@@ -29,7 +29,7 @@ impl Hash {
         unsafe {
             bindings::gcry_md_write(
                 self.handle,
-                bytes.as_ptr() as *c_void,
+                bytes.as_ptr() as *const c_void,
                 bytes.len() as size_t
             );
         }
@@ -48,7 +48,7 @@ impl Hash {
 
         unsafe {
             let buf = bindings::gcry_md_read(self.handle, self.algo);
-            buf_as_slice(buf, size, f)
+            buf_as_slice(buf as *const u8, size, f)
         }
     }
 
@@ -67,7 +67,7 @@ impl Drop for Hash {
 
 pub fn digest<C: BytesContainer>(message: C, algo: GcryptMdAlgo) -> Vec<u8> {
     let bytes     = message.container_as_bytes();
-    let bytes_ptr = bytes.as_ptr() as *c_void;
+    let bytes_ptr = bytes.as_ptr() as *const c_void;
 
     unsafe {
         let size       = bindings::gcry_md_get_algo_dlen(algo);

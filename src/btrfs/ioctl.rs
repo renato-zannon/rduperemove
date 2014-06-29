@@ -108,7 +108,7 @@ impl<'a> ExtentSame<'a> {
             ExtentSame {
                 args:  mem::transmute(args_ptr),
                 infos: mem::transmute(raw::Slice {
-                    data: infos_ptr as *btrfs_ioctl_same_extent_info,
+                    data: infos_ptr as *const btrfs_ioctl_same_extent_info,
                     len: info_count
                 }),
             }
