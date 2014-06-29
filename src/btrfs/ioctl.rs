@@ -1,52 +1,24 @@
-extern crate libc;
 use std::mem;
 use std::rt::heap;
 use std::{raw, ptr};
-use self::libc::c_int;
-
-static IOC_WRITE: i32 = 1;
-static IOC_READ:  i32 = 2;
-
-static IOC_NRBITS:   i32 = 8;
-static IOC_TYPEBITS: i32 = 8;
-static IOC_SIZEBITS: i32 = 14;
-
-static IOC_NRSHIFT:   uint = 0;
-static IOC_TYPESHIFT: uint = IOC_NRSHIFT   + IOC_NRBITS   as uint;
-static IOC_SIZESHIFT: uint = IOC_TYPESHIFT + IOC_TYPEBITS as uint;
-static IOC_DIRSHIFT:  uint = IOC_SIZESHIFT + IOC_SIZEBITS as uint;
-
-#[link(name = "c")]
-extern "C" {
-    fn ioctl(fd: c_int, command: c_int, ...) -> c_int;
-}
+use libc::c_int;
+use ioctl;
 
 static BTRFS_IOCTL_MAGIC: i32 = 0x94;
 
-macro_rules! ioc(
-    ($dir:expr, $ty:expr, $nr:expr, $size:expr) => {
-        ($dir  << IOC_DIRSHIFT)  |
-        ($ty   << IOC_TYPESHIFT) |
-        ($nr   << IOC_NRSHIFT)   |
-        ($size << IOC_SIZESHIFT)
-    }
-)
-
-macro_rules! iowr(
-    ($magic:expr, $nr:expr, $size:expr) => {
-        ioc!(IOC_READ | IOC_WRITE, $magic, $nr, $size as i32)
-    }
-)
-
 #[inline]
 pub unsafe fn btrfs_extent_same(fd: c_int, same: &mut btrfs_ioctl_same_args) -> int {
-    let btrfs_ioc_file_extent_same = iowr!(
+    let btrfs_ioc_file_extent_same = ioctl::iowr(
         BTRFS_IOCTL_MAGIC,
         54,
         ExtentSame::args_size()
     );
 
-    ioctl(fd as c_int, btrfs_ioc_file_extent_same as c_int, same) as int
+    ioctl::ioctl(
+        fd as c_int,
+        btrfs_ioc_file_extent_same as c_int,
+        same
+    ) as int
 }
 
 #[repr(C)]

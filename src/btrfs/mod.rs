@@ -1,5 +1,3 @@
-extern crate native;
-
 use native::io::file;
 use std::rt::rtio;
 use std::rt::rtio::RtioFileStream;

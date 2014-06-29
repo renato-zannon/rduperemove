@@ -1,4 +1,6 @@
 #![feature(macro_rules, unsafe_destructor)]
+extern crate libc;
+extern crate native;
 
 use std::io::{IoError, stdio};
 
@@ -7,6 +9,7 @@ mod gcrypt;
 mod filehasher;
 mod size_check;
 mod hash_check;
+mod ioctl;
 mod btrfs;
 
 static WORKER_COUNT: uint = 4;

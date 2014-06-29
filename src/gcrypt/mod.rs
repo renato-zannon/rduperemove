@@ -1,5 +1,4 @@
-extern crate libc;
-use self::libc::{size_t, c_void};
+use libc::{size_t, c_void};
 
 use std::path::BytesContainer;
 pub use self::bindings::{init, algos, GcryptMdAlgo};

@@ -1,6 +1,4 @@
-extern crate libc;
-
-use self::libc::{size_t, c_void, c_int, c_uint, c_uchar, c_char};
+use libc::{size_t, c_void, c_int, c_uint, c_uchar, c_char};
 pub use self::algos::GcryptMdAlgo;
 
 pub static GCRYPT_VERSION: &'static str = "1.6.1";
