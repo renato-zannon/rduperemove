@@ -63,6 +63,9 @@ RLIB = target/$(RLIB_FILE)
 DYLIB_FILE = $(shell (rustc --crate-type=dylib --crate-file-name "$(LIB_ENTRY_FILE)" 2> /dev/null) || (echo "dummy.dylib"))
 DYLIB = target/$(DYLIB_FILE)
 
+EXE_FILE = $(shell (rustc --crate-type=bin --print-file-name "$(EXE_ENTRY_FILE)" 2> /dev/null) || (echo "main"))
+EXE = bin/$(EXE_FILE)
+
 # Use 'VERBOSE=1' to echo all commands, for example 'make help VERBOSE=1'.
 ifdef VERBOSE
   Q :=
@@ -73,7 +76,7 @@ endif
 all: $(DEFAULT)
 
 help:
-	$(Q)echo "--- rust-empty (0.5 008)"
+	$(Q)echo "--- rust-empty (0.6 003)"
 	$(Q)echo "make run               - Runs executable"
 	$(Q)echo "make exe               - Builds main executable"
 	$(Q)echo "make lib               - Both static and dynamic library"
@@ -90,8 +93,8 @@ help:
 	$(Q)echo "make examples          - Builds examples"
 	$(Q)echo "make cargo-lite-exe    - Setup executable package"
 	$(Q)echo "make cargo-lite-lib    - Setup library package"
-	$(Q)echo "make cargo-exe         - EXPERIMENTAL: Setup executable package"
-	$(Q)echo "make cargo-lib         - EXPERIMENTAL: Setup library package"
+	$(Q)echo "make cargo-exe         - Setup executable package"
+	$(Q)echo "make cargo-lib         - Setup library package"
 	$(Q)echo "make rust-ci-lib       - Setup Travis CI Rust library"
 	$(Q)echo "make rust-ci-exe       - Setup Travis CI Rust executable"
 	$(Q)echo "make rusti             - Setup 'rusti.sh' for interactive Rust"
@@ -196,7 +199,7 @@ cargo-exe: $(EXE_ENTRY_FILE)
 		&& cat Cargo.toml \
 	)
 
-cargo-lib: $(EXE_ENTRY_FILE)
+cargo-lib: $(LIB_ENTRY_FILE)
 	$(Q)( \
 		test -e Cargo.toml \
 		&& echo "--- The file 'Cargo.toml' already exists" \
@@ -240,14 +243,14 @@ doc: $(SOURCE_FILES) | src/
 
 run: exe
 	$(Q)cd bin/ \
-	&& ./main
+	&& ./$(EXE_FILE)
 
 target-dir: $(TARGET_LIB_DIR)
 
-exe: bin/main | $(TARGET_LIB_DIR)
+exe: $(EXE) | $(TARGET_LIB_DIR)
 
-bin/main: $(SOURCE_FILES) | bin/ $(EXE_ENTRY_FILE)
-	$(Q)$(COMPILER) --target "$(TARGET)" $(COMPILER_FLAGS) $(EXE_ENTRY_FILE) -o bin/main -L "$(TARGET_LIB_DIR)" -L "target" \
+$(EXE): $(SOURCE_FILES) | bin/ $(EXE_ENTRY_FILE)
+	$(Q)$(COMPILER) --target "$(TARGET)" $(COMPILER_FLAGS) $(EXE_ENTRY_FILE) -o $(EXE) -L "$(TARGET_LIB_DIR)" -L "target" \
 	&& echo "--- Built executable" \
 	&& echo "--- Type 'make run' to run executable"
 
@@ -322,7 +325,7 @@ git-ignore:
 	) \
 	|| \
 	( \
-		echo -e ".DS_Store\n*~\n*#\n*.o\n*.so\n*.swp\n*.dylib\n*.dSYM\n*.dll\n*.rlib\n*.dummy\n*.exe\n*-test\n/bin/main\n/bin/test-internal\n/bin/test-external\n/doc/\n/target/\n/build/\n/.rust/\nrusti.sh\nwatch.sh\n/examples/**\n!/examples/*.rs\n!/examples/assets/" > .gitignore \
+		echo -e ".DS_Store\n*~\n*#\n*.o\n*.so\n*.swp\n*.dylib\n*.dSYM\n*.dll\n*.rlib\n*.dummy\n*.exe\n*-test\n/$(EXE)\n/bin/test-internal\n/bin/test-external\n/doc/\n/target/\n/build/\n/.rust/\nrusti.sh\nwatch.sh\n/examples/**\n!/examples/*.rs\n!/examples/assets/" > .gitignore \
 		&& echo "--- Created '.gitignore' for git" \
 		&& cat .gitignore \
 	)
@@ -358,7 +361,7 @@ clean:
 	$(Q)rm -f "$(RLIB)"
 	$(Q)rm -f "$(DYLIB)"
 	$(Q)rm -rf "doc/"
-	$(Q)rm -f "bin/main"
+	$(Q)rm -f "$(EXE)"
 	$(Q)rm -f "bin/test-internal"
 	$(Q)rm -f "bin/test-external"
 	$(Q)echo "--- Deleted binaries and documentation"
@@ -586,6 +589,7 @@ function build_deps {
 
         # Remember git directory to not build it twice
         git_dir[i]=$$current_git_dir
+        let i+=1
 
         # Visit the symlinks and build the dependencies
         build_deps
@@ -610,11 +614,13 @@ function build_deps {
             && $$MAKE clean \
             && $$MAKE \
         )
-        let i+=1
     done
     cd $$current
 }
 
+# Mark main project as visited to avoid infinite loop.
+git_dir[i]=$$(pwd)
+let i+=1
 if [ "$$1" == "deps" ]; then
     build_deps
 fi
