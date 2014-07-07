@@ -11,7 +11,7 @@
 *.dummy
 *.exe
 *-test
-/bin/main
+/bin/rduperemove
 /bin/test-internal
 /bin/test-external
 /doc/

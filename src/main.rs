@@ -1,3 +1,4 @@
+#![crate_name = "rduperemove"]
 #![feature(macro_rules, unsafe_destructor)]
 extern crate libc;
 extern crate native;
