@@ -42,12 +42,12 @@ impl<'a> Dedup<'a> {
             return 0;
         }
 
-        let same = ioctl::ExtentSame::new(dest_count);
+        let mut same = ioctl::ExtentSame::new(dest_count);
 
-        same.args.logical_offset = 0;
-        same.args.length = file_size - (file_size % 4096);
+        same.args().logical_offset = 0;
+        same.args().length = file_size - (file_size % 4096);
 
-        for (fd, info) in dest_fds.iter().zip(same.infos.mut_iter()) {
+        for (fd, info) in dest_fds.iter().zip(same.infos().mut_iter()) {
             info.fd = fd.fd() as i64;
             info.logical_offset = 0;
         }
@@ -56,23 +56,23 @@ impl<'a> Dedup<'a> {
 
         loop {
             let res = unsafe {
-                ioctl::btrfs_extent_same(source_fd.fd(), same.args)
+                ioctl::btrfs_extent_same(source_fd.fd(), same.args())
             };
 
-            if res != 0 || same.infos.iter().any(|info| info.status != 0) { break; }
+            if res != 0 || same.infos().iter().any(|info| info.status != 0) { break; }
 
-            let offset = same.infos[0].bytes_deduped;
-            assert!(same.infos.tail().iter().all(|info| info.bytes_deduped == offset));
+            let offset = same.infos()[0].bytes_deduped;
+            assert!(same.infos().tail().iter().all(|info| info.bytes_deduped == offset));
 
             total_dedup += (offset as uint) * dest_count;
 
-            if same.args.length < offset || offset == 0 { break; }
+            if same.args().length < offset || offset == 0 { break; }
 
-            same.args.logical_offset += offset;
-            same.args.length -= offset;
-            if same.args.length < 1 { break; }
+            same.args().logical_offset += offset;
+            same.args().length -= offset;
+            if same.args().length < 1 { break; }
 
-            for info in same.infos.mut_iter() {
+            for info in same.infos().mut_iter() {
                 info.logical_offset += offset;
             }
         }

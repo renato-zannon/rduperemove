@@ -46,13 +46,12 @@ pub struct btrfs_ioctl_same_extent_info {
     pub reserved: u32,
 }
 
-pub struct ExtentSame<'a> {
-    pub args:  &'a mut btrfs_ioctl_same_args,
-    pub infos: &'a mut [btrfs_ioctl_same_extent_info],
+pub struct ExtentSame {
+    allocation: *mut u8,
 }
 
-impl<'a> ExtentSame<'a> {
-    pub fn new(info_count: uint) -> ExtentSame<'a> {
+impl ExtentSame {
+    pub fn new(info_count: uint) -> ExtentSame {
         let args_size  = ExtentSame::args_size();
         let infos_size = ExtentSame::infos_size(info_count);
 
@@ -77,23 +76,30 @@ impl<'a> ExtentSame<'a> {
 
             ptr::zero_memory(infos_ptr, info_count);
 
-            ExtentSame {
-                args:  mem::transmute(args_ptr),
-                infos: mem::transmute(raw::Slice {
-                    data: infos_ptr as *const btrfs_ioctl_same_extent_info,
-                    len: info_count
-                }),
-            }
+            ExtentSame { allocation: allocation }
         }
     }
 
-    fn allocation(&mut self) -> *mut u8 {
-        (self.args as *mut btrfs_ioctl_same_args) as *mut u8
+    pub fn args(&mut self) -> &mut btrfs_ioctl_same_args {
+        unsafe { mem::transmute(self.allocation) }
     }
 
-    fn allocation_size(&self) -> uint {
+    pub fn infos(&mut self) -> &mut [btrfs_ioctl_same_extent_info] {
+        unsafe {
+            let args_size = ExtentSame::args_size();
+            let infos_ptr = self.allocation.offset(args_size as int);
+            let info_count = self.args().dest_count as uint;
+
+            mem::transmute(raw::Slice {
+                data: infos_ptr as *const btrfs_ioctl_same_extent_info,
+                len: info_count
+            })
+        }
+    }
+
+    fn allocation_size(&mut self) -> uint {
         ExtentSame::args_size() +
-            ExtentSame::infos_size(self.args.length as uint)
+            ExtentSame::infos_size(self.args().dest_count as uint)
     }
 
     fn args_size() -> uint {
@@ -105,12 +111,11 @@ impl<'a> ExtentSame<'a> {
     }
 }
 
-#[unsafe_destructor]
-impl<'a> Drop for ExtentSame<'a> {
+impl Drop for ExtentSame {
     fn drop(&mut self) {
         unsafe {
             heap::deallocate(
-                self.allocation(),
+                self.allocation,
                 self.allocation_size(),
                 mem::min_align_of::<btrfs_ioctl_same_args>(),
             );
