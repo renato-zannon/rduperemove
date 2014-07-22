@@ -52,7 +52,7 @@ pub struct ExtentSame<'a> {
 }
 
 impl<'a> ExtentSame<'a> {
-    pub fn new(info_count: uint) -> ExtentSame {
+    pub fn new(info_count: uint) -> ExtentSame<'a> {
         let args_size  = ExtentSame::args_size();
         let infos_size = ExtentSame::infos_size(info_count);
 
