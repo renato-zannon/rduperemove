@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet, PriorityQueue};
 use std::io::{TypeFile, IoResult, IoError, FileStat};
+use std::io::fs::PathExtensions;
 use std::{vec, io, iter};
 
 pub struct SizeCheck {
