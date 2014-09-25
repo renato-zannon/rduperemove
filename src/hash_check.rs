@@ -32,7 +32,7 @@ fn worker(rx: Receiver<Vec<Path>>, tx: Sender<Vec<Path>>) {
     for paths in rx.iter() {
         let paths_by_digest = digest_files(paths);
 
-        for (_, paths) in paths_by_digest.move_iter() {
+        for (_, paths) in paths_by_digest.into_iter() {
             if paths.len() > 1 {
                 tx.send(paths);
             }
@@ -43,7 +43,7 @@ fn worker(rx: Receiver<Vec<Path>>, tx: Sender<Vec<Path>>) {
 fn digest_files(paths: Vec<Path>) -> HashMap<Vec<u8>, Vec<Path>> {
     let mut paths_by_digest = HashMap::with_capacity(paths.len());
 
-    let future_digests = paths.move_iter().map(|path| {
+    let future_digests = paths.into_iter().map(|path| {
         Future::spawn(proc() {
             let mut hasher = filehasher::new(BUFFER_SIZE);
 
@@ -52,7 +52,7 @@ fn digest_files(paths: Vec<Path>) -> HashMap<Vec<u8>, Vec<Path>> {
         })
     }).collect::<Vec<Future<_>>>();
 
-    for future in future_digests.move_iter() {
+    for future in future_digests.into_iter() {
         let (path, digest): (Path, Vec<u8>) = future.unwrap();
 
         let dupes = paths_by_digest.find_or_insert_with(digest, |_| vec!());

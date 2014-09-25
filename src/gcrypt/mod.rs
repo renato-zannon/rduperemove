@@ -16,7 +16,7 @@ impl Hash {
         use std::ptr;
 
         unsafe {
-            let mut handle = ptr::mut_null();
+            let mut handle = ptr::null_mut();
             let handle_ptr = (&mut handle) as *mut bindings::gcrypt_md_handle;
             bindings::gcry_md_open(handle_ptr, algo, 0);
 

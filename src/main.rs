@@ -48,7 +48,7 @@ fn main() {
 fn create_size_check(base_dirs: Vec<Path>, min_file_size: uint) -> size_check::SizeCheck {
     let mut check = size_check::new_check(min_file_size);
 
-    for base_dir in base_dirs.move_iter() {
+    for base_dir in base_dirs.into_iter() {
         let mut stderr = stdio::stderr();
 
         let on_err = |err: IoError| {
@@ -78,7 +78,7 @@ fn parse_options() -> Configuration {
     let worker_count  = matches.opt_str("w").and_then(parse).unwrap_or(WORKER_COUNT);
     let min_file_size = matches.opt_str("s").and_then(parse).unwrap_or(MIN_FILE_SIZE);
 
-    let base_dirs = matches.free.move_iter().map(|base_dir| Path::new(base_dir)).collect();
+    let base_dirs = matches.free.into_iter().map(|base_dir| Path::new(base_dir)).collect();
 
     return Configuration {
         worker_count: worker_count,

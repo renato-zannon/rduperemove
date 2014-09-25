@@ -47,7 +47,7 @@ impl<'a> Dedup<'a> {
         same.args().logical_offset = 0;
         same.args().length = file_size - (file_size % 4096);
 
-        for (fd, info) in dest_fds.iter().zip(same.infos().mut_iter()) {
+        for (fd, info) in dest_fds.iter().zip(same.infos().iter_mut()) {
             info.fd = fd.fd() as i64;
             info.logical_offset = 0;
         }
@@ -72,7 +72,7 @@ impl<'a> Dedup<'a> {
             same.args().length -= offset;
             if same.args().length < 1 { break; }
 
-            for info in same.infos().mut_iter() {
+            for info in same.infos().iter_mut() {
                 info.logical_offset += offset;
             }
         }

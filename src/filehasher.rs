@@ -19,7 +19,7 @@ impl FileHasher {
             }
         }
 
-        hash.read(|result| Vec::from_slice(result))
+        hash.read(|result| result.to_vec())
     }
 }
 

@@ -45,7 +45,7 @@ impl SizeCheck {
             .into_sorted_vec();
 
         SizeGroups {
-            sorted_sizes_iter: sizes.move_iter().rev(),
+            sorted_sizes_iter: sizes.into_iter().rev(),
             size_groups: self.groups,
         }
     }
@@ -64,7 +64,7 @@ impl<'a> Iterator<Vec<Path>> for SizeGroups {
 
             if unique_stated_paths.len() < 2 { continue; }
 
-            let unique_paths = unique_stated_paths.move_iter().map(|stated_path| {
+            let unique_paths = unique_stated_paths.into_iter().map(|stated_path| {
                 stated_path.path
             }).collect();
 
@@ -134,7 +134,7 @@ impl<'a> Iterator<IoResult<StatedPath>> for FilesBelow {
                         Err(err)     => return Some(Err(err)),
                     };
 
-                    self.stack.push_all_move(dir_contents);
+                    self.stack.extend(dir_contents.into_iter());
                     continue;
                 },
 
