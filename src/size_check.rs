@@ -1,4 +1,6 @@
 use std::collections::{HashMap, HashSet, PriorityQueue};
+use std::collections::hashmap::{Occupied, Vacant};
+
 use std::io::{TypeFile, IoResult, IoError, FileStat};
 use std::io::fs::PathExtensions;
 use std::{vec, io, iter};
@@ -22,11 +24,15 @@ impl SizeCheck {
 
                     if size < self.min_size { continue; }
 
-                    let paths = self.groups.find_or_insert_with(size, |_| {
-                        Vec::new()
-                    });
+                    match self.groups.entry(size) {
+                        Vacant(entry) => {
+                            entry.set(vec!(stated_path));
+                        },
 
-                    paths.push(stated_path);
+                        Occupied(entry) => {
+                            entry.into_mut().push(stated_path);
+                        },
+                    };
                 },
 
                 Err(err) => {

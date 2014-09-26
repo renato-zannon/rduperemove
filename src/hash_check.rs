@@ -1,5 +1,7 @@
 use filehasher;
 use std::collections::HashMap;
+use std::collections::hashmap::{Occupied, Vacant};
+
 use std::io::File;
 use std::sync::Future;
 
@@ -55,8 +57,15 @@ fn digest_files(paths: Vec<Path>) -> HashMap<Vec<u8>, Vec<Path>> {
     for future in future_digests.into_iter() {
         let (path, digest): (Path, Vec<u8>) = future.unwrap();
 
-        let dupes = paths_by_digest.find_or_insert_with(digest, |_| vec!());
-        dupes.push(path);
+        match paths_by_digest.entry(digest) {
+            Vacant(entry) => {
+                entry.set(vec!(path));
+            },
+
+            Occupied(entry) => {
+                entry.into_mut().push(path);
+            },
+        };
     }
 
     paths_by_digest
