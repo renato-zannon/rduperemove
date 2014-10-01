@@ -52,7 +52,6 @@ fn main() {
     gcrypt::init();
 
     let config     = parse_options();
-    println!("{}", config.min_file_size);
     let size_check = create_size_check(config.base_dirs, config.min_file_size);
 
     let dupes_rx = hash_check::spawn_workers(config.worker_count, size_check.size_groups());
@@ -90,15 +89,13 @@ fn create_size_check(base_dirs: Vec<Path>, min_file_size: uint) -> size_check::S
 fn parse_options() -> Configuration {
     let options: CommandLineOptions = FlagParser::parse().unwrap_or_else(|e| e.exit());
 
-    let min_file_size = match options.flag_min_file_size {
-        0..MIN_FILE_SIZE => {
-            warn!("Btrfs can't deduplicate files smaller than 4096 bytes. \
-                   Using that instead of the passed {}", options.flag_min_file_size);
-            MIN_FILE_SIZE
-        },
-
-        size => size,
-    };
+    let min_file_size = if options.flag_min_file_size >= MIN_FILE_SIZE {
+         options.flag_min_file_size
+     } else {
+         warn!("Btrfs can't deduplicate files smaller than 4096 bytes. \
+                Using that instead of the passed {}", options.flag_min_file_size);
+         MIN_FILE_SIZE
+     };
 
     let base_dirs = options.arg_path.into_iter().map(|base_dir| Path::new(base_dir)).collect();
 
