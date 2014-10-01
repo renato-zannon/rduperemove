@@ -37,7 +37,18 @@ These are nice-to-have, but are not being actively sought:
 
 ## Building
 
-First of all, be sure that you have the latest rust nightly and cargo installed. Then:
+First of all, be sure that [you have the latest rust nightly and cargo installed](http://doc.rust-lang.org/guide.html#installing-rust):
+
+    curl -s https://static.rust-lang.org/rustup.sh | sudo sh -
+
+    # or, if you don't want to install globally, and you know how set PATH and
+    # LD_LIBRARY_PATH correctly:
+
+    curl -s https://static.rust-lang.org/rustup.sh | sh -s -- --prefix=~/.local
+
+You will also need the `gettext` and `transfig` packages installed on your OS (needed to build libgcrypt).
+
+Then:
 
     git clone --recursive https://github.com/renato-zannon/rduperemove.git
     cd rduperemove
