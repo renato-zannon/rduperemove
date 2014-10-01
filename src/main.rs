@@ -11,6 +11,7 @@ extern crate docopt;
 #[phase(plugin)] extern crate docopt_macros;
 
 use std::io::{IoError, stdio};
+use std::os;
 use docopt::FlagParser;
 
 #[allow(dead_code)]
@@ -43,6 +44,10 @@ Options:
 ", flag_min_file_size: uint, flag_worker_count: uint)
 
 fn main() {
+    // hacky way to set up the default logging level. See
+    // http://stackoverflow.com/questions/26142232/rust-change-the-default-log-level
+    os::setenv("RUST_LOG", "warn");
+
     gcrypt::init();
 
     let config     = parse_options();
