@@ -33,13 +33,15 @@ These are nice-to-have, but are not being actively sought:
 
 ## Dependencies
 
-* Links to [libgcrypt](http://directory.fsf.org/wiki/Libgcrypt) to do the hashing work. It's a very common library, needed by Systemd, Gnome, cryptsetup and Xorg, among others.
-
 * Should work on Linux >= 3.12, but I only tested on 3.15.
 
 ## Building
 
-The Makefile is from [rust-empty](https://github.com/bvssvni/rust-empty). If you don't have the latest rust nightly yet, you can get it by running `make nightly-install`. Then, just run `make exe` and get your executable at the `bin` folder.
+First of all, be sure that you have the latest rust nightly and cargo installed. Then:
+
+    git clone --recursive https://github.com/renato-zannon/rduperemove.git
+    cd rduperemove
+    cargo build
 
 ## Acknowledgements
 
