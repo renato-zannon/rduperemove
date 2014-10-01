@@ -1,10 +1,17 @@
 #![crate_name = "rduperemove"]
-#![feature(macro_rules)]
+#![feature(macro_rules, phase)]
+
 extern crate libc;
 extern crate native;
-extern crate getopts;
+
+extern crate serialize;
+extern crate docopt;
+
+#[phase(plugin, link)] extern crate log;
+#[phase(plugin)] extern crate docopt_macros;
 
 use std::io::{IoError, stdio};
+use docopt::FlagParser;
 
 #[allow(dead_code)]
 mod gcrypt;
@@ -14,7 +21,6 @@ mod hash_check;
 mod ioctl;
 mod btrfs;
 
-static WORKER_COUNT: uint = 4;
 static MIN_FILE_SIZE: uint = 4 * 1024;
 
 struct Configuration {
@@ -23,10 +29,24 @@ struct Configuration {
     min_file_size: uint,
 }
 
+docopt!(CommandLineOptions, "
+rduperemove - Whole-file deduplication for BTRFS filesystems on (Linux 3.13+).
+
+Usage: rduperemove [options] <path>...
+       rduperemove (-h|--help)
+
+Options:
+    -h, --help                          Show this message
+    -w <count>, --worker-count <count>  Number of workers threads to use [default: 4]
+    -s <size>, --min-file-size <size>   Minimum file size (in bytes, minimum 4096) to consider \
+                                        for deduplication [default: 4096]
+", flag_min_file_size: uint, flag_worker_count: uint)
+
 fn main() {
     gcrypt::init();
 
     let config     = parse_options();
+    println!("{}", config.min_file_size);
     let size_check = create_size_check(config.base_dirs, config.min_file_size);
 
     let dupes_rx = hash_check::spawn_workers(config.worker_count, size_check.size_groups());
@@ -62,31 +82,23 @@ fn create_size_check(base_dirs: Vec<Path>, min_file_size: uint) -> size_check::S
 }
 
 fn parse_options() -> Configuration {
-    use std::os;
-    use getopts::{optopt, getopts};
+    let options: CommandLineOptions = FlagParser::parse().unwrap_or_else(|e| e.exit());
 
-    let options = [
-        optopt("w", "worker",         "Number of base workers", "WORKERS"),
-        optopt("s", "min-file-size",  "The minimal file size",  "SIZE IN BYTES"),
-    ];
+    let min_file_size = match options.flag_min_file_size {
+        0..MIN_FILE_SIZE => {
+            warn!("Btrfs can't deduplicate files smaller than 4096 bytes. \
+                   Using that instead of the passed {}", options.flag_min_file_size);
+            MIN_FILE_SIZE
+        },
 
-    let matches = match getopts(os::args().tail(), options) {
-        Ok(m)  => m,
-        Err(f) => fail!("{}", f),
+        size => size,
     };
 
-    let worker_count  = matches.opt_str("w").and_then(parse).unwrap_or(WORKER_COUNT);
-    let min_file_size = matches.opt_str("s").and_then(parse).unwrap_or(MIN_FILE_SIZE);
+    let base_dirs = options.arg_path.into_iter().map(|base_dir| Path::new(base_dir)).collect();
 
-    let base_dirs = matches.free.into_iter().map(|base_dir| Path::new(base_dir)).collect();
-
-    return Configuration {
-        worker_count: worker_count,
+    Configuration {
+        worker_count: options.flag_worker_count,
         min_file_size: min_file_size,
         base_dirs: base_dirs,
-    };
-
-    fn parse(s: String) -> Option<uint> {
-        std::from_str::from_str(s.as_slice())
     }
 }

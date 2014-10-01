@@ -4,6 +4,9 @@ version = "0.0.1"
 
 authors = ["Renato Zannon <renato@rrsz.com>"]
 
+[dependencies.docopt_macros]
+git = "git://github.com/docopt/docopt.rs"
+
 [[bin]]
 name = "rduperemove"
 path = "src/main.rs"
