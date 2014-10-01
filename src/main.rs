@@ -37,10 +37,11 @@ Usage: rduperemove [options] <path>...
        rduperemove (-h|--help)
 
 Options:
-    -h, --help                          Show this message
+    <path>...                           One or more directories (on the same btrfs filesystem) \
+                                        to deduplicate.
     -w <count>, --worker-count <count>  Number of workers threads to use [default: 4]
-    -s <size>, --min-file-size <size>   Minimum file size (in bytes, minimum 4096) to consider \
-                                        for deduplication [default: 4096]
+    -s <size>, --min-file-size <size>   Minimum file size to consider for deduplication [default: 4096]
+    -h, --help                          Show this message
 ", flag_min_file_size: uint, flag_worker_count: uint)
 
 fn main() {
