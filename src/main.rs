@@ -4,6 +4,8 @@
 extern crate libc;
 extern crate native;
 
+extern crate gcrypt;
+
 extern crate serialize;
 extern crate docopt;
 
@@ -14,8 +16,6 @@ use std::io::{IoError, stdio};
 use std::os;
 use docopt::FlagParser;
 
-#[allow(dead_code)]
-mod gcrypt;
 mod filehasher;
 mod size_check;
 mod hash_check;

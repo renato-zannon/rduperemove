@@ -1,7 +1,9 @@
+extern crate libc;
+
 use libc::{size_t, c_void};
 
 use std::path::BytesContainer;
-pub use self::bindings::{init, algos, GcryptMdAlgo};
+pub use bindings::{init, algos, GcryptMdAlgo};
 
 #[allow(non_camel_case_types, dead_code)]
 mod bindings;

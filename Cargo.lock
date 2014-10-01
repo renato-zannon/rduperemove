@@ -3,6 +3,7 @@ name = "rduperemove"
 version = "0.0.1"
 dependencies = [
  "docopt_macros 0.6.4 (git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e)",
+ "gcrypt 0.0.1",
 ]
 
 [[package]]
@@ -17,4 +18,8 @@ source = "git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d13
 dependencies = [
  "docopt 0.6.4 (git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e)",
 ]
+
+[[package]]
+name = "gcrypt"
+version = "0.0.1"
 
