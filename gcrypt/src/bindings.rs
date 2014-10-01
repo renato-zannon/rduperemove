@@ -102,7 +102,8 @@ enum GcryCtlCmd {
 
 pub type gcrypt_md_handle = *mut u8;
 
-#[link(name = "gcrypt")]
+#[link(name = "gpg-error", kind = "static")]
+#[link(name = "gcrypt", kind = "static")]
 extern "C" {
     pub fn gcry_check_version(req_version: *const c_char) -> *mut c_char;
     pub fn gcry_control(cmd: GcryCtlCmd, ...) -> c_uint;
