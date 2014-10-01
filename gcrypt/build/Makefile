@@ -7,6 +7,8 @@ else
 CFLAGS += -m64
 endif
 
+export PATH := $(OUT_DIR)/bin:$(PATH)
+
 all: copy_libs
 
 copy_libs: libgpgerror libgcrypt
