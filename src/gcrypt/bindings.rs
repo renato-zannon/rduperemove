@@ -116,17 +116,17 @@ extern "C" {
 
 struct GcryptThreadCbs { option: c_uint }
 
-static gcry_threads_pthread: GcryptThreadCbs = GcryptThreadCbs {
+static mut gcry_threads_pthread: GcryptThreadCbs = GcryptThreadCbs {
     option: (3 | (1 << 8))
 };
 
-static gcry_threads_pth: GcryptThreadCbs = GcryptThreadCbs {
+static mut gcry_threads_pth: GcryptThreadCbs = GcryptThreadCbs {
     option: (2 | (1 << 8))
 };
 
 pub fn init() {
     unsafe {
-        gcry_control(GCRYCTL_SET_THREAD_CBS, (&gcry_threads_pthread) as *const GcryptThreadCbs);
+        gcry_control(GCRYCTL_SET_THREAD_CBS, (&mut gcry_threads_pthread) as *mut GcryptThreadCbs);
 
         GCRYPT_VERSION.with_c_str(|c_str| {
             gcry_check_version(c_str);
