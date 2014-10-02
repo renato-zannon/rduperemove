@@ -7,7 +7,9 @@ use std::sync::Future;
 
 static BUFFER_SIZE:  uint = 64 * 1024;
 
-pub fn spawn_workers<T: Iterator<Vec<Path>> + Send>(count: uint, groups: T) -> Receiver<Vec<Path>> {
+pub fn spawn_workers<Iter>(count: uint, groups: Iter) -> Receiver<Vec<Path>>
+    where Iter: Iterator<Vec<Path>> + Send
+{
     let (results_tx, results_rx) = channel();
 
     spawn(proc() {
