@@ -1,6 +1,9 @@
 #![crate_name = "rduperemove"]
 #![feature(macro_rules, phase)]
 
+#[cfg(not(ndebug))]
+extern crate debug;
+
 extern crate libc;
 extern crate native;
 
