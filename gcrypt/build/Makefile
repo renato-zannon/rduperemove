@@ -7,6 +7,10 @@ else
 CFLAGS += -m64
 endif
 
+ifeq ($(PROFILE),"release")
+CFLAGS += -O2 -pipe -march=native
+endif
+
 export PATH := $(OUT_DIR)/bin:$(PATH)
 
 all: copy_libs
