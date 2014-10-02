@@ -42,14 +42,12 @@ fn spawn_workers_manager<Iter>(count: uint, iter: Iter, results_tx: Sender<Vec<P
     where Iter: Iterator<Vec<Path>> + Send
 {
 
-    spawn(proc() {
-        let (job_results_tx, job_results_rx) = channel();
+    let (job_results_tx, job_results_rx) = channel();
 
-        let worker_txs  = spawn_worker_txs(count, job_results_tx);
-        let size_groups = seed_workers(worker_txs, iter);
+    let worker_txs  = spawn_worker_txs(count, job_results_tx);
+    let size_groups = seed_workers(worker_txs, iter);
 
-        listen_for_responses(size_groups, job_results_rx, results_tx);
-    });
+    listen_for_responses(size_groups, job_results_rx, results_tx);
 }
 
 
