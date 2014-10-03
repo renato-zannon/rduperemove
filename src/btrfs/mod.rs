@@ -1,16 +1,17 @@
 use native::io::file;
 use std::rt::rtio;
 use std::rt::rtio::RtioFileStream;
+use std::sync::Arc;
 
 #[allow(non_camel_case_types)]
 mod ioctl;
 
 pub struct Dedup<'a> {
-    source: Path,
-    destinations: &'a [Path]
+    source: Arc<Path>,
+    destinations: &'a [Arc<Path>]
 }
 
-pub fn new_dedup<'a>(source: Path, destinations: &'a [Path]) -> Dedup<'a> {
+pub fn new_dedup<'a>(source: Arc<Path>, destinations: &'a [Arc<Path>]) -> Dedup<'a> {
     Dedup {
         source: source,
         destinations: destinations

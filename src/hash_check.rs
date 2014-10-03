@@ -3,19 +3,20 @@ use filehasher;
 use std::collections::HashMap;
 use std::collections::hashmap::{Occupied, Vacant};
 
+use std::sync::Arc;
 use std::io::{IoError, File};
 
 static BUFFER_SIZE:  uint = 64 * 1024;
 
 struct SizeGroup {
-    paths: Vec<Path>,
+    paths: Vec<Arc<Path>>,
     paths_per_digest: HashMap<Vec<u8>, Vec<uint>>,
     remaining: uint,
 }
 
 struct DigestJob {
     id: (uint, uint),
-    path: Path,
+    path: Arc<Path>,
 }
 
 struct DigestJobResult {
@@ -28,8 +29,8 @@ enum DigestResult {
     ResultError(IoError),
 }
 
-pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Path>>
-    where Iter: Iterator<Vec<Path>> + Send
+pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Arc<Path>>>
+    where Iter: Iterator<Vec<Arc<Path>>> + Send
 {
     let (results_tx, results_rx) = channel();
 
@@ -38,8 +39,8 @@ pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Path>>
 }
 
 
-fn spawn_workers_manager<Iter>(count: uint, iter: Iter, results_tx: Sender<Vec<Path>>)
-    where Iter: Iterator<Vec<Path>> + Send
+fn spawn_workers_manager<Iter>(count: uint, iter: Iter, results_tx: Sender<Vec<Arc<Path>>>)
+    where Iter: Iterator<Vec<Arc<Path>>> + Send
 {
 
     let (job_results_tx, job_results_rx) = channel();
@@ -54,7 +55,7 @@ fn spawn_workers_manager<Iter>(count: uint, iter: Iter, results_tx: Sender<Vec<P
 fn listen_for_responses(
     mut size_groups: Vec<SizeGroup>,
     job_results_rx: Receiver<DigestJobResult>,
-    results_tx: Sender<Vec<Path>>)
+    results_tx: Sender<Vec<Arc<Path>>>)
 {
     for job_result in job_results_rx.iter() {
         let (group_id, path_id) = job_result.id;
@@ -87,7 +88,7 @@ fn listen_for_responses(
         for (_, path_ids) in group.paths_per_digest.iter() {
             if path_ids.len() < 2 { continue; }
 
-            let paths: Vec<Path> = path_ids.iter().map(|&path_id| {
+            let paths: Vec<Arc<Path>> = path_ids.iter().map(|&path_id| {
                 group.paths[path_id].clone()
             }).collect();
 
@@ -108,7 +109,7 @@ fn spawn_worker_txs(count: uint, job_results_tx: Sender<DigestJobResult>) -> Vec
 }
 
 fn seed_workers<Iter>(worker_txs: Vec<Sender<DigestJob>>, iter: Iter) -> Vec<SizeGroup>
-    where Iter: Iterator<Vec<Path>> + Send
+    where Iter: Iterator<Vec<Arc<Path>>> + Send
 {
     let workers_cycle = worker_txs.iter().cycle();
 
@@ -142,7 +143,7 @@ fn worker(rx: Receiver<DigestJob>, tx: Sender<DigestJobResult>) {
     let mut hasher = filehasher::new(BUFFER_SIZE);
 
     for DigestJob { id: id, path: path } in rx.iter() {
-        let result = match File::open(&path) {
+        let result = match File::open(& *path) {
             Ok(file) => {
                 let digest = hasher.hash_whole_file(file);
                 ResultSuccessful(digest)

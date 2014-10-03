@@ -17,6 +17,7 @@ extern crate docopt;
 
 use std::io::{IoError, stdio};
 use std::os;
+use std::sync::Arc;
 use docopt::FlagParser;
 
 mod filehasher;
@@ -83,7 +84,7 @@ fn create_size_check(base_dirs: Vec<Path>, min_file_size: uint) -> size_check::S
             (writeln!(stderr, "WARNING: {}", err)).unwrap();
         };
 
-        check.add_base_dir(&base_dir, on_err).unwrap();
+        check.add_base_dir(Arc::new(base_dir), on_err).unwrap();
     }
 
     check

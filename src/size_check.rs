@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet, PriorityQueue};
 use std::collections::hashmap::{Occupied, Vacant};
 
+use std::sync::Arc;
 use std::io::{TypeFile, IoResult, IoError, FileStat};
 use std::io::fs::PathExtensions;
 use std::{vec, io, iter};
@@ -16,8 +17,8 @@ pub fn new_check(min_size: uint) -> SizeCheck {
 
 impl SizeCheck {
     #[must_use]
-    pub fn add_base_dir(&mut self, dir: &Path, on_err: |IoError|) -> IoResult<()> {
-        for file in try!(recurse_directory(dir)) {
+    pub fn add_base_dir(&mut self, dir: Arc<Path>, on_err: |IoError|) -> IoResult<()> {
+        for file in try!(recurse_directory(&dir)) {
             match file {
                 Ok(stated_path) => {
                     let size = stated_path.stat.size as uint;
@@ -62,8 +63,8 @@ pub struct SizeGroups {
     size_groups: HashMap<uint, Vec<StatedPath>>
 }
 
-impl<'a> Iterator<Vec<Path>> for SizeGroups {
-    fn next(&mut self) -> Option<Vec<Path>> {
+impl<'a> Iterator<Vec<Arc<Path>>> for SizeGroups {
+    fn next(&mut self) -> Option<Vec<Arc<Path>>> {
         for size in self.sorted_sizes_iter {
             let stated_paths = self.size_groups.pop(&size).unwrap();
             let unique_stated_paths = remove_repeated_inodes(stated_paths);
@@ -94,7 +95,7 @@ fn remove_repeated_inodes(mut stated_paths: Vec<StatedPath>) -> Vec<StatedPath> 
     stated_paths
 }
 
-fn recurse_directory(dir: &Path) -> IoResult<FilesBelow> {
+fn recurse_directory(dir: &Arc<Path>) -> IoResult<FilesBelow> {
     let stat = try!(dir.stat());
 
     match stat.kind {
@@ -110,11 +111,11 @@ fn recurse_directory(dir: &Path) -> IoResult<FilesBelow> {
 }
 
 struct FilesBelow {
-    stack: Vec<Path>,
+    stack: Vec<Arc<Path>>,
 }
 
 struct StatedPath {
-    path: Path,
+    path: Arc<Path>,
     stat: FileStat,
 }
 
@@ -135,12 +136,16 @@ impl<'a> Iterator<IoResult<StatedPath>> for FilesBelow {
 
             match stat.kind {
                 io::TypeDirectory => {
-                    let dir_contents = match fs::readdir(&current) {
+                    let dir_contents = match fs::readdir(& *current) {
                         Ok(contents) => contents,
                         Err(err)     => return Some(Err(err)),
                     };
 
-                    self.stack.extend(dir_contents.into_iter());
+                    let children = dir_contents.into_iter().map(|child| {
+                        Arc::new(child)
+                    });
+
+                    self.stack.extend(children);
                     continue;
                 },
 
