@@ -1,3 +1,5 @@
+extern crate libc;
+
 use libc::c_int;
 
 static IOC_WRITE: i32 = 1;

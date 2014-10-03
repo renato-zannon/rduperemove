@@ -1,10 +1,15 @@
+extern crate native;
+extern crate libc;
+
+extern crate ioctl;
+
 use native::io::file;
 use std::rt::rtio;
 use std::rt::rtio::RtioFileStream;
 use std::sync::Arc;
 
 #[allow(non_camel_case_types)]
-mod ioctl;
+mod bindings;
 
 pub struct Dedup<'a> {
     source: Arc<Path>,
@@ -43,7 +48,7 @@ impl<'a> Dedup<'a> {
             return 0;
         }
 
-        let mut same = ioctl::ExtentSame::new(dest_count);
+        let mut same = bindings::ExtentSame::new(dest_count);
 
         same.args().logical_offset = 0;
         same.args().length = file_size - (file_size % 4096);
@@ -57,7 +62,7 @@ impl<'a> Dedup<'a> {
 
         loop {
             let res = unsafe {
-                ioctl::btrfs_extent_same(source_fd.fd(), same.args())
+                bindings::btrfs_extent_same(source_fd.fd(), same.args())
             };
 
             if res != 0 || same.infos().iter().any(|info| info.status != 0) { break; }

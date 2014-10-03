@@ -7,6 +7,18 @@ authors = ["Renato Zannon <renato@rrsz.com>"]
 [dependencies.gcrypt]
 path = "lib/gcrypt"
 
+[dependencies.btrfs]
+path = "lib/btrfs"
+
+[dependencies.fiemap]
+path = "lib/fiemap"
+
+[dependencies.ioctl]
+path = "lib/ioctl"
+
+[dependencies.docopt]
+git = "git://github.com/docopt/docopt.rs"
+
 [dependencies.docopt_macros]
 git = "git://github.com/docopt/docopt.rs"
 

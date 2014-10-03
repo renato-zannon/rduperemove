@@ -2,8 +2,19 @@
 name = "rduperemove"
 version = "0.0.1"
 dependencies = [
+ "btrfs 0.0.1",
+ "docopt 0.6.4 (git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e)",
  "docopt_macros 0.6.4 (git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e)",
+ "fiemap 0.0.1",
  "gcrypt 0.0.1",
+ "ioctl 0.0.1",
+]
+
+[[package]]
+name = "btrfs"
+version = "0.0.1"
+dependencies = [
+ "ioctl 0.0.1",
 ]
 
 [[package]]
@@ -20,6 +31,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fiemap"
+version = "0.0.1"
+dependencies = [
+ "ioctl 0.0.1",
+]
+
+[[package]]
 name = "gcrypt"
+version = "0.0.1"
+
+[[package]]
+name = "ioctl"
 version = "0.0.1"
 

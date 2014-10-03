@@ -4,13 +4,11 @@
 #[cfg(not(ndebug))]
 extern crate debug;
 
-extern crate libc;
-extern crate native;
-
-extern crate gcrypt;
-
 extern crate serialize;
 extern crate docopt;
+
+extern crate gcrypt;
+extern crate btrfs;
 
 #[phase(plugin, link)] extern crate log;
 #[phase(plugin)] extern crate docopt_macros;
@@ -23,8 +21,6 @@ use docopt::FlagParser;
 mod filehasher;
 mod size_check;
 mod hash_check;
-mod ioctl;
-mod btrfs;
 
 static MIN_FILE_SIZE: uint = 4 * 1024;
 
