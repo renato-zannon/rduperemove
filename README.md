@@ -46,11 +46,9 @@ First of all, be sure that [you have the latest rust nightly and cargo installed
 
     curl -s https://static.rust-lang.org/rustup.sh | sh -s -- --prefix=~/.local
 
-You will also need the `gettext` and `transfig` packages installed on your OS (needed to build libgcrypt).
-
 Then:
 
-    git clone --recursive https://github.com/renato-zannon/rduperemove.git
+    git clone https://github.com/renato-zannon/rduperemove.git
     cd rduperemove
     cargo build
 

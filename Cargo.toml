@@ -4,9 +4,6 @@ version = "0.0.1"
 
 authors = ["Renato Zannon <renato@rrsz.com>"]
 
-[dependencies.gcrypt]
-path = "lib/gcrypt"
-
 [dependencies.btrfs]
 path = "lib/btrfs"
 
@@ -21,6 +18,9 @@ git = "git://github.com/docopt/docopt.rs"
 
 [dependencies.docopt_macros]
 git = "git://github.com/docopt/docopt.rs"
+
+[dependencies.rust-crypto]
+git = "git://github.com/DaGenix/rust-crypto"
 
 [[bin]]
 name = "rduperemove"

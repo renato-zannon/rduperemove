@@ -1,6 +1,0 @@
-[submodule "lib/gcrypt/build/libgcrypt"]
-	path = lib/gcrypt/build/libgcrypt
-	url = git://git.gnupg.org/libgcrypt.git
-[submodule "lib/gcrypt/build/libgpg-error"]
-	path = lib/gcrypt/build/libgpg-error
-	url = git://git.gnupg.org/libgpg-error.git
