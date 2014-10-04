@@ -2,17 +2,18 @@ use ioctl;
 use std::{raw, mem, ptr, u64};
 use std::rt::heap;
 use libc::c_int;
+use std::io::IoResult;
 
 static FIEMAP_IOCTL_MAGIC: i32 = 'f' as i32;
 
-pub unsafe fn fiemap_ioctl(fd: c_int, map: &mut fiemap) -> int {
+pub unsafe fn fiemap_ioctl(fd: c_int, map: &mut fiemap) -> IoResult<int> {
     let fiemap_command = ioctl::iowr(
         FIEMAP_IOCTL_MAGIC,
         11,
         mem::size_of::<fiemap>()
     );
 
-    ioctl::ioctl(fd, fiemap_command as c_int, map) as int
+    ioctl!(fd, fiemap_command as c_int, map)
 }
 
 #[repr(C)]
@@ -116,7 +117,7 @@ pub struct FiemapRequest {
 }
 
 impl FiemapRequest {
-    pub fn new(fd: c_int) -> FiemapRequest {
+    pub fn new(fd: c_int) -> IoResult<FiemapRequest> {
         unsafe {
             // Allocate (and zero) an initial fiemap struct
             let mut alloc = heap::allocate(mem::size_of::<fiemap>(), mem::min_align_of::<fiemap>());
@@ -127,7 +128,7 @@ impl FiemapRequest {
             map.fm_length = u64::MAX;
 
             // Ask the FS how many extents there are
-            fiemap_ioctl(fd, map);
+            try!(fiemap_ioctl(fd, map));
 
             let extent_count = map.fm_mapped_extents as uint;
 
@@ -150,12 +151,12 @@ impl FiemapRequest {
             let extents_ptr = alloc.offset(mem::size_of::<fiemap>() as int) as *mut fiemap_extent;
             ptr::zero_memory(extents_ptr, extent_count);
 
-            fiemap_ioctl(fd, map);
+            try!(fiemap_ioctl(fd, map));
 
-            FiemapRequest {
+            Ok(FiemapRequest {
                 allocation: alloc,
                 allocation_size: alloc_size,
-            }
+            })
         }
     }
 
@@ -199,13 +200,13 @@ mod tests {
     #[test]
     fn test_create_fiemap_request() {
         let (_tempdir, file) = create_tempfile();
-        let _request = FiemapRequest::new(file.fd());
+        let _request = FiemapRequest::new(file.fd()).unwrap();
     }
 
     #[test]
     fn test_drop_fiemap_request() {
         let (_tempdir, file) = create_tempfile();
-        drop(FiemapRequest::new(file.fd()));
+        drop(FiemapRequest::new(file.fd()).unwrap());
     }
 
     fn create_tempfile() -> (TempDir, file::FileDesc) {

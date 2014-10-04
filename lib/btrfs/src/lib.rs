@@ -1,7 +1,10 @@
+#![feature(phase)]
+
 extern crate native;
 extern crate libc;
 
-extern crate ioctl;
+#[phase(plugin, link)] extern crate ioctl;
+#[phase(plugin, link)] extern crate log;
 
 use native::io::file;
 use std::rt::rtio;
@@ -61,11 +64,18 @@ impl<'a> Dedup<'a> {
         let mut total_dedup = 0u;
 
         loop {
-            let res = unsafe {
-                bindings::btrfs_extent_same(source_fd.fd(), same.args())
+            let errored = unsafe {
+                let result = bindings::btrfs_extent_same(source_fd.fd(), same.args());
+
+                match result {
+                    Err(err) => { warn!("Error: {}", err); true },
+                    Ok(_)  => {
+                        same.infos().iter().any(|info| info.status != 0)
+                    }
+                }
             };
 
-            if res != 0 || same.infos().iter().any(|info| info.status != 0) { break; }
+            if errored { break; }
 
             let offset = same.infos()[0].bytes_deduped;
             assert!(same.infos().tail().iter().all(|info| info.bytes_deduped == offset));

@@ -1,8 +1,9 @@
-#![feature(macro_rules, concat_idents)]
+#![feature(phase)]
 
 extern crate libc;
-extern crate ioctl;
 extern crate native;
+
+#[phase(plugin, link)] extern crate ioctl;
 
 #[cfg(not(ndebug))]
 extern crate debug;

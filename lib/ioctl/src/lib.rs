@@ -1,3 +1,5 @@
+#![feature(macro_rules)]
+
 extern crate libc;
 
 use libc::c_int;
@@ -31,3 +33,18 @@ pub fn iowr(magic: i32, nr: i32, size: uint) -> i32 {
 extern "C" {
     pub fn ioctl(fd: c_int, command: c_int, ...) -> c_int;
 }
+
+#[macro_export]
+macro_rules! ioctl(
+    ($fd:expr, $command:expr, $($arg:expr),+) => (
+        {
+            let result = ioctl::ioctl($fd, $command, $($arg),+) as int;
+
+            if result < 0 {
+                Err(::std::io::IoError::last_error())
+            } else {
+                Ok(result)
+            }
+        }
+    )
+)
