@@ -47,7 +47,10 @@ Options:
 fn main() {
     // hacky way to set up the default logging level. See
     // http://stackoverflow.com/questions/26142232/rust-change-the-default-log-level
-    os::setenv("RUST_LOG", "warn");
+    match os::getenv("RUST_LOG") {
+        Some(_) => (),
+        None    => os::setenv("RUST_LOG", "warn")
+    };
 
     let config     = parse_options();
     let size_check = create_size_check(config.base_dirs, config.min_file_size);
