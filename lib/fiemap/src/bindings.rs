@@ -1,5 +1,6 @@
 use ioctl;
-use std::mem;
+use std::{raw, mem, ptr, u64};
+use std::rt::heap;
 use libc::c_int;
 
 static FIEMAP_IOCTL_MAGIC: i32 = 'f' as i32;
@@ -107,4 +108,121 @@ pub mod extent_flags {
             static Shared = 0x00002000
         }
     )
+}
+
+pub struct FiemapRequest {
+    allocation: *mut u8,
+    allocation_size: uint,
+}
+
+impl FiemapRequest {
+    pub fn new(fd: c_int) -> FiemapRequest {
+        unsafe {
+            // Allocate (and zero) an initial fiemap struct
+            let mut alloc = heap::allocate(mem::size_of::<fiemap>(), mem::min_align_of::<fiemap>());
+            let mut map: &mut fiemap = mem::transmute(alloc);
+            ptr::zero_memory(map as *mut fiemap, 1);
+
+            // We want all extents
+            map.fm_length = u64::MAX;
+
+            // Ask the FS how many extents there are
+            fiemap_ioctl(fd, map);
+
+            let extent_count = map.fm_mapped_extents as uint;
+
+            let alloc_size = mem::size_of::<fiemap>() +
+                extent_count * mem::size_of::<fiemap_extent>();
+
+            // Extend the allocation to accomodate the extents
+            alloc = heap::reallocate(
+                alloc,
+                alloc_size,
+                mem::min_align_of::<fiemap>(),
+                mem::size_of::<fiemap>(),
+            );
+
+            // This may have changed after the reallocation
+            map = mem::transmute(alloc);
+            map.fm_extent_count = extent_count as u32;
+            map.fm_mapped_extents = 0;
+
+            let extents_ptr = alloc.offset(mem::size_of::<fiemap>() as int) as *mut fiemap_extent;
+            ptr::zero_memory(extents_ptr, extent_count);
+
+            fiemap_ioctl(fd, map);
+
+            FiemapRequest {
+                allocation: alloc,
+                allocation_size: alloc_size,
+            }
+        }
+    }
+
+    pub fn fiemap(&mut self) -> &mut fiemap {
+        unsafe { mem::transmute(self.allocation) }
+    }
+
+    pub fn extents(&mut self) -> &mut [fiemap_extent] {
+        unsafe {
+            let extents_ptr = self.allocation.offset(mem::size_of::<fiemap>() as int);
+            let count = self.fiemap().fm_extent_count as uint;
+
+            mem::transmute(raw::Slice {
+                data: extents_ptr as *const fiemap_extent,
+                len:  count,
+            })
+        }
+    }
+}
+
+impl Drop for FiemapRequest {
+    fn drop(&mut self) {
+        unsafe {
+            heap::deallocate(
+                self.allocation,
+                self.allocation_size,
+                mem::min_align_of::<fiemap>(),
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FiemapRequest;
+    use native::io::file;
+    use std::rt::rtio::{mod, RtioFileStream};
+    use std::io::TempDir;
+    use std::os;
+
+    #[test]
+    fn test_create_fiemap_request() {
+        let (_tempdir, file) = create_tempfile();
+        let _request = FiemapRequest::new(file.fd());
+    }
+
+    #[test]
+    fn test_drop_fiemap_request() {
+        let (_tempdir, file) = create_tempfile();
+        drop(FiemapRequest::new(file.fd()));
+    }
+
+    fn create_tempfile() -> (TempDir, file::FileDesc) {
+        let tempdir = TempDir::new_in(& os::getcwd(), "fiemap")
+            .ok()
+            .expect("Couldn't create temp dir");
+
+        let mut file = file::open(
+            & tempdir.path().join("foo").to_c_str(),
+            rtio::Open,
+            rtio::ReadWrite,
+        ).ok().expect("Couldn't create test file");
+
+        for _ in range(0u, 100) {
+            file.write(b"foo bar baz").ok().expect("Couldn't write to test file");
+        }
+
+        (tempdir, file)
+    }
 }
