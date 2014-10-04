@@ -1,16 +1,18 @@
 use filehasher;
 
-use std::collections::HashMap;
-use std::collections::hashmap::{Occupied, Vacant};
+use std::collections::TreeMap;
+use std::collections::SmallIntMap;
 
 use std::sync::Arc;
 use std::io::{IoError, File};
+
+use log;
 
 static BUFFER_SIZE:  uint = 64 * 1024;
 
 struct SizeGroup {
     paths: Vec<Arc<Path>>,
-    paths_per_digest: HashMap<Vec<u8>, Vec<uint>>,
+    paths_per_digest: TreeMap<Vec<u8>, Vec<uint>>,
     remaining: uint,
 }
 
@@ -53,46 +55,59 @@ fn spawn_workers_manager<Iter>(count: uint, iter: Iter, results_tx: Sender<Vec<A
 
 
 fn listen_for_responses(
-    mut size_groups: Vec<SizeGroup>,
+    mut size_groups: SmallIntMap<SizeGroup>,
     job_results_rx: Receiver<DigestJobResult>,
     results_tx: Sender<Vec<Arc<Path>>>)
 {
     for job_result in job_results_rx.iter() {
         let (group_id, path_id) = job_result.id;
 
-        let ref mut group = size_groups.as_mut_slice()[group_id];
+        let remaining = {
+            let group: &mut SizeGroup = size_groups
+                .find_mut(&group_id)
+                .expect("Incomplete size group was removed!");
 
-        match job_result.result {
-            ResultSuccessful(digest) => {
-                match group.paths_per_digest.entry(digest) {
-                    Occupied(entry) => {
-                        entry.into_mut().push(path_id);
-                    },
+            match job_result.result {
+                ResultSuccessful(digest) => {
+                    let ref mut map = group.paths_per_digest;
 
-                    Vacant(entry) => {
-                        entry.set(vec![path_id]);
+                    let added = match map.find_mut(&digest) {
+                        Some(v) => {
+                            v.push(path_id);
+                            true
+                        },
+
+                        None => false
+                    };
+
+                    if !added {
+                        map.insert(digest, vec![path_id]);
                     }
+                },
+
+                ResultError(err) => {
+                    error!("Error while trying to digest path: {}", err);
                 }
-            },
-
-            ResultError(err) => {
-                error!("Error while trying to digest path: {}", err);
             }
-        }
 
-        if group.remaining > 1 {
             group.remaining -= 1;
+            group.remaining
+        };
+
+        if remaining > 0 {
             continue;
-        }
+        } else {
+            let group = size_groups.pop(&group_id).unwrap();
 
-        for (_, path_ids) in group.paths_per_digest.iter() {
-            if path_ids.len() < 2 { continue; }
+            for (_, path_ids) in group.paths_per_digest.iter() {
+                if path_ids.len() < 2 { continue; }
 
-            let paths: Vec<Arc<Path>> = path_ids.iter().map(|&path_id| {
-                group.paths[path_id].clone()
-            }).collect();
+                let paths: Vec<Arc<Path>> = path_ids.iter().map(|&path_id| {
+                    group.paths[path_id].clone()
+                }).collect();
 
-            results_tx.send(paths);
+                results_tx.send(paths);
+            }
         }
     }
 }
@@ -108,14 +123,14 @@ fn spawn_worker_txs(count: uint, job_results_tx: Sender<DigestJobResult>) -> Vec
     })
 }
 
-fn seed_workers<Iter>(worker_txs: Vec<Sender<DigestJob>>, iter: Iter) -> Vec<SizeGroup>
+fn seed_workers<Iter>(worker_txs: Vec<Sender<DigestJob>>, iter: Iter) -> SmallIntMap<SizeGroup>
     where Iter: Iterator<Vec<Arc<Path>>> + Send
 {
     let workers_cycle = worker_txs.iter().cycle();
 
-    let mut size_groups = Vec::new();
+    let mut size_groups: SmallIntMap<SizeGroup>;
 
-    for (group_id, paths) in iter.enumerate() {
+    size_groups = iter.enumerate().map(|(group_id, paths)| {
         {
             let mut cycle = paths.iter().zip(workers_cycle).enumerate();
 
@@ -129,12 +144,14 @@ fn seed_workers<Iter>(worker_txs: Vec<Sender<DigestJob>>, iter: Iter) -> Vec<Siz
             }
         }
 
-        size_groups.push(SizeGroup {
+        let group = SizeGroup {
             remaining: paths.len(),
             paths: paths,
-            paths_per_digest: HashMap::new()
-        });
-    }
+            paths_per_digest: TreeMap::new()
+        };
+
+        (group_id, group)
+    }).collect();
 
     size_groups
 }
