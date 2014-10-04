@@ -4,9 +4,8 @@ use std::collections::TreeMap;
 use std::collections::SmallIntMap;
 
 use std::sync::Arc;
+use std::sync::deque::{mod, BufferPool};
 use std::io::{IoError, File};
-
-use log;
 
 static BUFFER_SIZE:  uint = 64 * 1024;
 
@@ -36,21 +35,26 @@ pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Arc<Path>>>
 {
     let (results_tx, results_rx) = channel();
 
-    spawn(proc() spawn_workers_manager(count, iter, results_tx));
+    spawn(proc() {
+        let (job_results_tx, job_results_rx) = channel();
+
+        let pool = BufferPool::new();
+        let (w, stealer) = pool.deque();
+
+        let size_groups = seed_workers(w, iter);
+
+        for _ in range(0, count) {
+            let stealer = stealer.clone();
+            let worker_job_results_tx = job_results_tx.clone();
+
+            spawn(proc() worker(stealer, worker_job_results_tx));
+        }
+        drop(job_results_tx);
+
+        listen_for_responses(size_groups, job_results_rx, results_tx);
+    });
+
     results_rx
-}
-
-
-fn spawn_workers_manager<Iter>(count: uint, iter: Iter, results_tx: Sender<Vec<Arc<Path>>>)
-    where Iter: Iterator<Vec<Arc<Path>>> + Send
-{
-
-    let (job_results_tx, job_results_rx) = channel();
-
-    let worker_txs  = spawn_worker_txs(count, job_results_tx);
-    let size_groups = seed_workers(worker_txs, iter);
-
-    listen_for_responses(size_groups, job_results_rx, results_tx);
 }
 
 
@@ -112,35 +116,20 @@ fn listen_for_responses(
     }
 }
 
-fn spawn_worker_txs(count: uint, job_results_tx: Sender<DigestJobResult>) -> Vec<Sender<DigestJob>> {
-    Vec::from_fn(count, |_| {
-        let (worker_tx, worker_rx) = channel();
-
-        let worker_job_results_tx = job_results_tx.clone();
-        spawn(proc() worker(worker_rx, worker_job_results_tx));
-
-        worker_tx
-    })
-}
-
-fn seed_workers<Iter>(worker_txs: Vec<Sender<DigestJob>>, iter: Iter) -> SmallIntMap<SizeGroup>
+fn seed_workers<Iter>(worker: deque::Worker<DigestJob>, iter: Iter) -> SmallIntMap<SizeGroup>
     where Iter: Iterator<Vec<Arc<Path>>> + Send
 {
-    let workers_cycle = worker_txs.iter().cycle();
-
     let mut size_groups: SmallIntMap<SizeGroup>;
 
     size_groups = iter.enumerate().map(|(group_id, paths)| {
         {
-            let mut cycle = paths.iter().zip(workers_cycle).enumerate();
-
-            for (path_id, (path, worker_tx)) in cycle {
+            for (path_id, path) in paths.iter().enumerate() {
                 let job = DigestJob {
                     id: (group_id, path_id),
                     path: path.clone(),
                 };
 
-                worker_tx.send(job);
+                worker.push(job);
             }
         }
 
@@ -156,10 +145,16 @@ fn seed_workers<Iter>(worker_txs: Vec<Sender<DigestJob>>, iter: Iter) -> SmallIn
     size_groups
 }
 
-fn worker(rx: Receiver<DigestJob>, tx: Sender<DigestJobResult>) {
+fn worker(stealer: deque::Stealer<DigestJob>, tx: Sender<DigestJobResult>) {
     let mut hasher = filehasher::new(BUFFER_SIZE);
 
-    for DigestJob { id: id, path: path } in rx.iter() {
+    loop {
+        let DigestJob { id: id, path: path } = match stealer.steal() {
+            deque::Empty     => break,
+            deque::Abort     => continue,
+            deque::Data(job) => job,
+        };
+
         let result = match File::open(& *path) {
             Ok(file) => {
                 let digest = hasher.hash_whole_file(file);
