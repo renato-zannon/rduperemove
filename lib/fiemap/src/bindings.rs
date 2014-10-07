@@ -59,15 +59,15 @@ pub mod flags {
     bitflags!(
         flags Flags: u32 {
             /* sync file data before map */
-            static Sync = 0x00000001,
+            static SYNC = 0x00000001,
 
             /* map extended attribute tree */
-            static Xattr = 0x00000002,
+            static XATTR = 0x00000002,
 
             /* request caching of the extents */
-            static Cache = 0x00000004,
+            static CACHE = 0x00000004,
 
-            static Compat = Sync.bits | Xattr.bits
+            static COMPAT = SYNC.bits | XATTR.bits
         }
     )
 }
@@ -76,37 +76,37 @@ pub mod extent_flags {
     bitflags!(
         flags ExtentFlags: u32 {
             /* Last extent in file. */
-            static Last = 0x00000001,
+            static LAST = 0x00000001,
 
             /* Data location unknown. */
-            static Unknown = 0x00000002,
+            static UNKNOWN = 0x00000002,
 
             /* Location still pending. Sets EXTENT_UNKNOWN. */
-            static Delalloc = 0x00000004,
+            static DELALLOC = 0x00000004,
 
             /* Data can not be read while fs is unmounted */
-            static Encoded = 0x00000008,
+            static ENCODED = 0x00000008,
 
             /* Data is encrypted by fs. Sets EXTENT_NO_BYPASS. */
-            static DataEncrypted = 0x00000080,
+            static DATA_ENCRYPTED = 0x00000080,
 
             /* Extent offsets may not be block aligned. */
-            static NotAligned = 0x00000100,
+            static NOT_ALIGNED = 0x00000100,
 
             /* Data mixed with metadata. Sets EXTENT_NOT_ALIGNED.*/
-            static DataInline = 0x00000200,
+            static DATA_INLINE = 0x00000200,
 
             /* Multiple files in block. Sets EXTENT_NOT_ALIGNED.*/
-            static DataTail = 0x00000400,
+            static DATA_TAIL = 0x00000400,
 
             /* Space allocated, but no data (i.e. zero). */
-            static Unwritten = 0x00000800,
+            static UNWRITTEN = 0x00000800,
 
             /* File does not natively support extents. Result merged for efficiency. */
-            static Merged = 0x00001000,
+            static MERGED = 0x00001000,
 
             /* Space shared with other files. */
-            static Shared = 0x00002000
+            static SHARED = 0x00002000
         }
     )
 }
