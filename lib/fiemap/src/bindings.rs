@@ -4,6 +4,9 @@ use std::rt::heap;
 use libc::c_int;
 use std::io::IoResult;
 
+pub use self::flags::Flags as FiemapFlags;
+pub use self::extent_flags::ExtentFlags;
+
 static FIEMAP_IOCTL_MAGIC: i32 = 'f' as i32;
 
 pub unsafe fn fiemap_ioctl(fd: c_int, map: &mut fiemap) -> IoResult<int> {
@@ -33,6 +36,21 @@ pub struct fiemap_extent {
     fe_reserved: [u32, ..3],
 }
 
+impl fiemap_extent {
+    pub fn flags(&self) -> ExtentFlags {
+        ExtentFlags::from_bits_truncate(self.fe_flags)
+    }
+}
+
+impl PartialEq for fiemap_extent {
+    fn eq(&self, other: &fiemap_extent) -> bool {
+        self.fe_logical == other.fe_logical &&
+            self.fe_physical == other.fe_physical &&
+            self.fe_length   == other.fe_length &&
+            self.fe_flags    == other.fe_flags
+    }
+}
+
 #[repr(C)]
 pub struct fiemap {
     /* logical offset (inclusive) at which to start mapping (in) */
@@ -53,6 +71,12 @@ pub struct fiemap {
 
     /* array of mapped extents (out) */
     pub fm_extents: [fiemap_extent, ..0],
+}
+
+impl fiemap {
+    pub fn flags(&self) -> FiemapFlags {
+        FiemapFlags::from_bits_truncate(self.fm_flags)
+    }
 }
 
 pub mod flags {
