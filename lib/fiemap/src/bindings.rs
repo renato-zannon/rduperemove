@@ -191,39 +191,18 @@ impl Drop for FiemapRequest {
 
 #[cfg(test)]
 mod tests {
+    use test_helpers;
     use super::FiemapRequest;
-    use native::io::file;
-    use std::rt::rtio::{mod, RtioFileStream};
-    use std::io::TempDir;
-    use std::os;
 
     #[test]
     fn test_create_fiemap_request() {
-        let (_tempdir, file) = create_tempfile();
+        let (_tempdir, file) = test_helpers::create_tempfile();
         let _request = FiemapRequest::new(file.fd()).unwrap();
     }
 
     #[test]
     fn test_drop_fiemap_request() {
-        let (_tempdir, file) = create_tempfile();
+        let (_tempdir, file) = test_helpers::create_tempfile();
         drop(FiemapRequest::new(file.fd()).unwrap());
-    }
-
-    fn create_tempfile() -> (TempDir, file::FileDesc) {
-        let tempdir = TempDir::new_in(& os::getcwd(), "fiemap")
-            .ok()
-            .expect("Couldn't create temp dir");
-
-        let mut file = file::open(
-            & tempdir.path().join("foo").to_c_str(),
-            rtio::Open,
-            rtio::ReadWrite,
-        ).ok().expect("Couldn't create test file");
-
-        for _ in range(0u, 100) {
-            file.write(b"foo bar baz").ok().expect("Couldn't write to test file");
-        }
-
-        (tempdir, file)
     }
 }

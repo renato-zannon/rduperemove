@@ -10,3 +10,6 @@ extern crate debug;
 
 #[allow(non_camel_case_types)]
 pub mod bindings;
+
+#[cfg(test)]
+mod test_helpers;
