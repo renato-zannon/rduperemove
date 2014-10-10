@@ -4,17 +4,17 @@ extern crate libc;
 
 use libc::c_int;
 
-static IOC_WRITE: i32 = 1;
-static IOC_READ:  i32 = 2;
+const IOC_WRITE: i32 = 1;
+const IOC_READ:  i32 = 2;
 
-static IOC_NRBITS:   uint = 8;
-static IOC_TYPEBITS: uint = 8;
-static IOC_SIZEBITS: uint = 14;
+const IOC_NRBITS:   uint = 8;
+const IOC_TYPEBITS: uint = 8;
+const IOC_SIZEBITS: uint = 14;
 
-static IOC_NRSHIFT:   uint = 0u;
-static IOC_TYPESHIFT: uint = IOC_NRSHIFT   + IOC_NRBITS;
-static IOC_SIZESHIFT: uint = IOC_TYPESHIFT + IOC_TYPEBITS;
-static IOC_DIRSHIFT:  uint = IOC_SIZESHIFT + IOC_SIZEBITS;
+const IOC_NRSHIFT:   uint = 0u;
+const IOC_TYPESHIFT: uint = IOC_NRSHIFT   + IOC_NRBITS;
+const IOC_SIZESHIFT: uint = IOC_TYPESHIFT + IOC_TYPEBITS;
+const IOC_DIRSHIFT:  uint = IOC_SIZESHIFT + IOC_SIZEBITS;
 
 #[inline]
 pub fn ioc(dir: i32, ty: i32, nr: i32, size: i32) -> i32 {

@@ -7,7 +7,7 @@ use std::io::IoResult;
 pub use self::flags::Flags as FiemapFlags;
 pub use self::extent_flags::ExtentFlags;
 
-static FIEMAP_IOCTL_MAGIC: i32 = 'f' as i32;
+const FIEMAP_IOCTL_MAGIC: i32 = 'f' as i32;
 
 pub unsafe fn fiemap_ioctl(fd: c_int, map: &mut fiemap) -> IoResult<int> {
     let fiemap_command = ioctl::iowr(
@@ -83,15 +83,15 @@ pub mod flags {
     bitflags!(
         flags Flags: u32 {
             /* sync file data before map */
-            static SYNC = 0x00000001,
+            const SYNC = 0x00000001,
 
             /* map extended attribute tree */
-            static XATTR = 0x00000002,
+            const XATTR = 0x00000002,
 
             /* request caching of the extents */
-            static CACHE = 0x00000004,
+            const CACHE = 0x00000004,
 
-            static COMPAT = SYNC.bits | XATTR.bits
+            const COMPAT = SYNC.bits | XATTR.bits
         }
     )
 }
@@ -100,37 +100,37 @@ pub mod extent_flags {
     bitflags!(
         flags ExtentFlags: u32 {
             /* Last extent in file. */
-            static LAST = 0x00000001,
+            const LAST = 0x00000001,
 
             /* Data location unknown. */
-            static UNKNOWN = 0x00000002,
+            const UNKNOWN = 0x00000002,
 
             /* Location still pending. Sets EXTENT_UNKNOWN. */
-            static DELALLOC = 0x00000004,
+            const DELALLOC = 0x00000004,
 
             /* Data can not be read while fs is unmounted */
-            static ENCODED = 0x00000008,
+            const ENCODED = 0x00000008,
 
             /* Data is encrypted by fs. Sets EXTENT_NO_BYPASS. */
-            static DATA_ENCRYPTED = 0x00000080,
+            const DATA_ENCRYPTED = 0x00000080,
 
             /* Extent offsets may not be block aligned. */
-            static NOT_ALIGNED = 0x00000100,
+            const NOT_ALIGNED = 0x00000100,
 
             /* Data mixed with metadata. Sets EXTENT_NOT_ALIGNED.*/
-            static DATA_INLINE = 0x00000200,
+            const DATA_INLINE = 0x00000200,
 
             /* Multiple files in block. Sets EXTENT_NOT_ALIGNED.*/
-            static DATA_TAIL = 0x00000400,
+            const DATA_TAIL = 0x00000400,
 
             /* Space allocated, but no data (i.e. zero). */
-            static UNWRITTEN = 0x00000800,
+            const UNWRITTEN = 0x00000800,
 
             /* File does not natively support extents. Result merged for efficiency. */
-            static MERGED = 0x00001000,
+            const MERGED = 0x00001000,
 
             /* Space shared with other files. */
-            static SHARED = 0x00002000
+            const SHARED = 0x00002000
         }
     )
 }
