@@ -162,9 +162,9 @@ impl FiemapRequest {
             // Extend the allocation to accomodate the extents
             alloc = heap::reallocate(
                 alloc,
+                mem::size_of::<fiemap>(),
                 alloc_size,
                 mem::min_align_of::<fiemap>(),
-                mem::size_of::<fiemap>(),
             );
 
             // This may have changed after the reallocation
