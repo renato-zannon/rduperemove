@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::sync::deque::{mod, BufferPool};
 use std::io::{IoError, File};
 
-static BUFFER_SIZE:  uint = 64 * 1024;
+const BUFFER_SIZE:  uint = 64 * 1024;
 
 struct SizeGroup {
     paths: Vec<Arc<Path>>,

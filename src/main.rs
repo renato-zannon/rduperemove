@@ -22,7 +22,7 @@ mod filehasher;
 mod size_check;
 mod hash_check;
 
-static MIN_FILE_SIZE: uint = 4 * 1024;
+const MIN_FILE_SIZE: uint = 4 * 1024;
 
 struct Configuration {
     base_dirs:     Vec<Path>,

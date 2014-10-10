@@ -5,7 +5,7 @@ use libc::c_int;
 use std::io::IoResult;
 use ioctl;
 
-static BTRFS_IOCTL_MAGIC: i32 = 0x94;
+const BTRFS_IOCTL_MAGIC: i32 = 0x94;
 
 #[inline]
 pub unsafe fn btrfs_extent_same(fd: c_int, same: &mut btrfs_ioctl_same_args) -> IoResult<int> {
