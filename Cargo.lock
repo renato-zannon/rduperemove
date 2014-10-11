@@ -7,7 +7,7 @@ dependencies = [
  "docopt_macros 0.6.4 (git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e)",
  "fiemap 0.0.1",
  "ioctl 0.0.1",
- "rust-crypto 0.1.0 (git+git://github.com/DaGenix/rust-crypto#16083e31b7d872a671bf580254dc8e3b95a9282f)",
+ "rust-crypto 0.1.0 (git+git://github.com/DaGenix/rust-crypto#12e28a90f5432504302051b65967736761913ee2)",
 ]
 
 [[package]]
@@ -44,5 +44,5 @@ version = "0.0.1"
 [[package]]
 name = "rust-crypto"
 version = "0.1.0"
-source = "git+git://github.com/DaGenix/rust-crypto#16083e31b7d872a671bf580254dc8e3b95a9282f"
+source = "git+git://github.com/DaGenix/rust-crypto#12e28a90f5432504302051b65967736761913ee2"
 
