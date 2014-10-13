@@ -3,8 +3,8 @@ name = "rduperemove"
 version = "0.0.1"
 dependencies = [
  "btrfs 0.0.1",
- "docopt 0.6.4 (git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e)",
- "docopt_macros 0.6.4 (git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e)",
+ "docopt 0.6.4 (git+git://github.com/docopt/docopt.rs#7515c10dcc94a7263d5e062c434b1465167673dd)",
+ "docopt_macros 0.6.4 (git+git://github.com/docopt/docopt.rs#7515c10dcc94a7263d5e062c434b1465167673dd)",
  "fiemap 0.0.1",
  "ioctl 0.0.1",
  "rust-crypto 0.1.0 (git+git://github.com/DaGenix/rust-crypto#12e28a90f5432504302051b65967736761913ee2)",
@@ -20,14 +20,14 @@ dependencies = [
 [[package]]
 name = "docopt"
 version = "0.6.4"
-source = "git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e"
+source = "git+git://github.com/docopt/docopt.rs#7515c10dcc94a7263d5e062c434b1465167673dd"
 
 [[package]]
 name = "docopt_macros"
 version = "0.6.4"
-source = "git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e"
+source = "git+git://github.com/docopt/docopt.rs#7515c10dcc94a7263d5e062c434b1465167673dd"
 dependencies = [
- "docopt 0.6.4 (git+git://github.com/docopt/docopt.rs#21ce1190ef7631f71e52de5e13eb4d131564b82e)",
+ "docopt 0.6.4 (git+git://github.com/docopt/docopt.rs#7515c10dcc94a7263d5e062c434b1465167673dd)",
 ]
 
 [[package]]
