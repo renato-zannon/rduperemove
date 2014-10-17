@@ -5,9 +5,6 @@ extern crate native;
 
 #[phase(plugin, link)] extern crate ioctl;
 
-#[cfg(not(ndebug))]
-extern crate debug;
-
 use native::io::file::FileDesc;
 use bindings::FiemapRequest;
 
