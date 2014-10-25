@@ -149,7 +149,7 @@ fn worker(stealer: deque::Stealer<DigestJob>, tx: Sender<DigestJobResult>) {
     let mut hasher = filehasher::new(BUFFER_SIZE);
 
     loop {
-        let DigestJob { id: id, path: path } = match stealer.steal() {
+        let DigestJob { id, path } = match stealer.steal() {
             deque::Empty     => break,
             deque::Abort     => continue,
             deque::Data(job) => job,
