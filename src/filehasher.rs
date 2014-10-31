@@ -17,7 +17,7 @@ impl FileHasher {
                 Ok(count) => self.hasher.input(self.buffer.slice_to(count)),
 
                 Err(IoError { kind: EndOfFile, ..}) => break,
-                Err(err) => fail!("Error while hashing file: {}", err),
+                Err(err) => panic!("Error while hashing file: {}", err),
             }
         }
 

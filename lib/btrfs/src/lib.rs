@@ -32,7 +32,7 @@ impl<'a> Dedup<'a> {
             let source = self.source.to_c_str();
             match file::open(&source, rtio::Open, rtio::Read) {
                 Ok(fd)  => fd,
-                Err(..) => fail!("Couldn't open file {} for reading", self.source.display()),
+                Err(..) => panic!("Couldn't open file {} for reading", self.source.display()),
             }
         };
 
@@ -44,7 +44,7 @@ impl<'a> Dedup<'a> {
 
         let file_size = match source_fd.fstat() {
             Ok(stat) => stat.size,
-            Err(..)  => fail!("Couldn't get source file ({}) size", self.source.display()),
+            Err(..)  => panic!("Couldn't get source file ({}) size", self.source.display()),
         };
 
         if file_size < 4096 {
