@@ -1,7 +1,7 @@
 use filehasher;
 
 use std::collections::TreeMap;
-use std::collections::SmallIntMap;
+use std::collections::VecMap;
 
 use std::sync::Arc;
 use std::sync::deque::{mod, BufferPool};
@@ -59,7 +59,7 @@ pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Arc<Path>>>
 
 
 fn listen_for_responses(
-    mut size_groups: SmallIntMap<SizeGroup>,
+    mut size_groups: VecMap<SizeGroup>,
     job_results_rx: Receiver<DigestJobResult>,
     results_tx: Sender<Vec<Arc<Path>>>)
 {
@@ -68,14 +68,14 @@ fn listen_for_responses(
 
         let remaining = {
             let group: &mut SizeGroup = size_groups
-                .find_mut(&group_id)
+                .get_mut(&group_id)
                 .expect("Incomplete size group was removed!");
 
             match job_result.result {
                 ResultSuccessful(digest) => {
                     let ref mut map = group.paths_per_digest;
 
-                    let added = match map.find_mut(&digest) {
+                    let added = match map.get_mut(&digest) {
                         Some(v) => {
                             v.push(path_id);
                             true
@@ -101,7 +101,7 @@ fn listen_for_responses(
         if remaining > 0 {
             continue;
         } else {
-            let group = size_groups.pop(&group_id).unwrap();
+            let group = size_groups.remove(&group_id).unwrap();
 
             for (_, path_ids) in group.paths_per_digest.iter() {
                 if path_ids.len() < 2 { continue; }
@@ -116,10 +116,10 @@ fn listen_for_responses(
     }
 }
 
-fn seed_workers<Iter>(worker: deque::Worker<DigestJob>, iter: Iter) -> SmallIntMap<SizeGroup>
+fn seed_workers<Iter>(worker: deque::Worker<DigestJob>, iter: Iter) -> VecMap<SizeGroup>
     where Iter: Iterator<Vec<Arc<Path>>> + Send
 {
-    let mut size_groups: SmallIntMap<SizeGroup>;
+    let mut size_groups: VecMap<SizeGroup>;
 
     size_groups = iter.enumerate().map(|(group_id, paths)| {
         {

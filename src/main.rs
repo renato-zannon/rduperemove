@@ -13,7 +13,6 @@ extern crate "rust-crypto" as crypto;
 use std::io::{IoError, stdio};
 use std::os;
 use std::sync::Arc;
-use docopt::FlagParser;
 
 mod filehasher;
 mod size_check;
@@ -85,7 +84,9 @@ fn create_size_check(base_dirs: Vec<Path>, min_file_size: uint) -> size_check::S
 }
 
 fn parse_options() -> Configuration {
-    let options: CommandLineOptions = FlagParser::parse().unwrap_or_else(|e| e.exit());
+    let options: CommandLineOptions = CommandLineOptions::docopt()
+        .decode()
+        .unwrap_or_else(|e| e.exit());
 
     let min_file_size = if options.flag_min_file_size >= MIN_FILE_SIZE {
          options.flag_min_file_size

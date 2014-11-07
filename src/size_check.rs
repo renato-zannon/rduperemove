@@ -1,5 +1,5 @@
-use std::collections::{HashMap, HashSet, PriorityQueue};
-use std::collections::hashmap::{Occupied, Vacant};
+use std::collections::{HashMap, HashSet, BinaryHeap};
+use std::collections::hash_map::{Occupied, Vacant};
 
 use std::sync::Arc;
 use std::io::{TypeFile, IoResult, IoError, FileStat};
@@ -48,7 +48,7 @@ impl SizeCheck {
     pub fn size_groups(self) -> SizeGroups {
         let sizes = self.groups.keys()
             .map(|n| *n)
-            .collect::<PriorityQueue<uint>>()
+            .collect::<BinaryHeap<uint>>()
             .into_sorted_vec();
 
         SizeGroups {
@@ -66,7 +66,7 @@ pub struct SizeGroups {
 impl<'a> Iterator<Vec<Arc<Path>>> for SizeGroups {
     fn next(&mut self) -> Option<Vec<Arc<Path>>> {
         for size in self.sorted_sizes_iter {
-            let stated_paths = self.size_groups.pop(&size).unwrap();
+            let stated_paths = self.size_groups.remove(&size).unwrap();
             let unique_stated_paths = remove_repeated_inodes(stated_paths);
 
             if unique_stated_paths.len() < 2 { continue; }
