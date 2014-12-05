@@ -1,11 +1,11 @@
-#![feature(phase)]
+#![feature(phase, globs)]
 
 extern crate libc;
-extern crate native;
 
 #[phase(plugin, link)] extern crate ioctl;
 
-use native::io::file::FileDesc;
+use std::io::File;
+use std::os::unix::prelude::*;
 use bindings::FiemapRequest;
 
 #[allow(non_camel_case_types)]
@@ -14,9 +14,9 @@ pub mod bindings;
 #[cfg(test)]
 mod test_helpers;
 
-pub fn compare(file1: &FileDesc, file2: &FileDesc) -> ComparisonResult {
-    let mut request1 = FiemapRequest::new(file1.fd()).unwrap();
-    let mut request2 = FiemapRequest::new(file2.fd()).unwrap();
+pub fn compare(file1: &File, file2: &File) -> ComparisonResult {
+    let mut request1 = FiemapRequest::new(file1.as_raw_fd()).unwrap();
+    let mut request2 = FiemapRequest::new(file2.as_raw_fd()).unwrap();
 
     let extents1 = request1.extents();
     let extents2 = request2.extents();
@@ -40,11 +40,11 @@ pub fn compare(file1: &FileDesc, file2: &FileDesc) -> ComparisonResult {
     };
 
     if inits_match && (lasts_match || extents1.len() == 1 && extents2.len() == 1)  {
-        AlreadyDeduped
+        ComparisonResult::AlreadyDeduped
     } else if inits_match {
-        PartiallyDeduped
+        ComparisonResult::PartiallyDeduped
     } else {
-        NotDeduped
+        ComparisonResult::NotDeduped
     }
 }
 

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet, BinaryHeap};
 use std::collections::hash_map::{Occupied, Vacant};
 
 use std::sync::Arc;
-use std::io::{TypeFile, IoResult, IoError, FileStat};
+use std::io::{FileType, IoResult, IoError, FileStat};
 use std::io::fs::PathExtensions;
 use std::{vec, io, iter};
 
@@ -99,7 +99,7 @@ fn recurse_directory(dir: &Arc<Path>) -> IoResult<FilesBelow> {
     let stat = try!(dir.stat());
 
     match stat.kind {
-        io::TypeDirectory => Ok(FilesBelow { stack: vec!(dir.clone()) }),
+        FileType::Directory => Ok(FilesBelow { stack: vec!(dir.clone()) }),
         _  => {
             Err(IoError {
                 kind: io::MismatchedFileTypeForOperation,
@@ -135,7 +135,7 @@ impl<'a> Iterator<IoResult<StatedPath>> for FilesBelow {
             };
 
             match stat.kind {
-                io::TypeDirectory => {
+                FileType::Directory => {
                     let dir_contents = match fs::readdir(& *current) {
                         Ok(contents) => contents,
                         Err(err)     => return Some(Err(err)),
@@ -149,7 +149,7 @@ impl<'a> Iterator<IoResult<StatedPath>> for FilesBelow {
                     continue;
                 },
 
-                io::TypeFile => {
+                FileType::RegularFile => {
                     let stated_path = StatedPath {
                         path: current,
                         stat: stat,

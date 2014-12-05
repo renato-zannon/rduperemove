@@ -74,7 +74,7 @@ fn create_size_check(base_dirs: Vec<Path>, min_file_size: uint) -> size_check::S
         let mut stderr = stdio::stderr();
 
         let on_err = |err: IoError| {
-            (writeln!(stderr, "WARNING: {}", err)).unwrap();
+            (writeln!(&mut stderr, "WARNING: {}", err)).unwrap();
         };
 
         check.add_base_dir(Arc::new(base_dir), on_err).unwrap();

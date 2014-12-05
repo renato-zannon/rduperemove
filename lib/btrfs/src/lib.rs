@@ -1,15 +1,13 @@
-#![feature(phase)]
+#![feature(phase, globs)]
 
-extern crate native;
 extern crate libc;
 
 #[phase(plugin, link)] extern crate ioctl;
 #[phase(plugin, link)] extern crate log;
 
-use native::io::file;
-use std::rt::rtio;
-use std::rt::rtio::RtioFileStream;
+use std::io::{File, FileMode, FileAccess};
 use std::sync::Arc;
+use std::os::unix::prelude::*;
 
 #[allow(non_camel_case_types)]
 mod bindings;
@@ -28,21 +26,19 @@ pub fn new_dedup<'a>(source: Arc<Path>, destinations: &'a [Arc<Path>]) -> Dedup<
 
 impl<'a> Dedup<'a> {
     pub fn perform(self) -> uint {
-        let mut source_fd = {
-            let source = self.source.to_c_str();
-            match file::open(&source, rtio::Open, rtio::Read) {
-                Ok(fd)  => fd,
-                Err(..) => panic!("Couldn't open file {} for reading", self.source.display()),
+        let mut source_file = {
+            match File::open(&*self.source) {
+                Ok(file) => file,
+                Err(..)  => panic!("Couldn't open file {} for reading", self.source.display()),
             }
         };
 
         let dest_count = self.destinations.len();
-        let dest_fds = self.destinations.iter().filter_map(|dest_path| {
-            let dest = dest_path.to_c_str();
-            file::open(&dest, rtio::Open, rtio::ReadWrite).ok()
-        }).collect::<Vec<file::FileDesc>>();
+        let dest_files = self.destinations.iter().filter_map(|dest_path| {
+            File::open_mode(&**dest_path, FileMode::Open, FileAccess::ReadWrite).ok()
+        }).collect::<Vec<_>>();
 
-        let file_size = match source_fd.fstat() {
+        let file_size = match source_file.stat() {
             Ok(stat) => stat.size,
             Err(..)  => panic!("Couldn't get source file ({}) size", self.source.display()),
         };
@@ -56,8 +52,8 @@ impl<'a> Dedup<'a> {
         same.args().logical_offset = 0;
         same.args().length = file_size - (file_size % 4096);
 
-        for (fd, info) in dest_fds.iter().zip(same.infos().iter_mut()) {
-            info.fd = fd.fd() as i64;
+        for (file, info) in dest_files.iter().zip(same.infos().iter_mut()) {
+            info.fd = file.as_raw_fd() as i64;
             info.logical_offset = 0;
         }
 
@@ -65,7 +61,7 @@ impl<'a> Dedup<'a> {
 
         loop {
             let errored = unsafe {
-                let result = bindings::btrfs_extent_same(source_fd.fd(), same.args());
+                let result = bindings::btrfs_extent_same(source_file.as_raw_fd(), same.args());
 
                 match result {
                     Err(err) => { warn!("Error: {}", err); true },

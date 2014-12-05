@@ -26,8 +26,8 @@ struct DigestJobResult {
 }
 
 enum DigestResult {
-    ResultSuccessful(Vec<u8>),
-    ResultError(IoError),
+    Successful(Vec<u8>),
+    Error(IoError),
 }
 
 pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Arc<Path>>>
@@ -72,7 +72,7 @@ fn listen_for_responses(
                 .expect("Incomplete size group was removed!");
 
             match job_result.result {
-                ResultSuccessful(digest) => {
+                DigestResult::Successful(digest) => {
                     let ref mut map = group.paths_per_digest;
 
                     let added = match map.get_mut(&digest) {
@@ -89,7 +89,7 @@ fn listen_for_responses(
                     }
                 },
 
-                ResultError(err) => {
+                DigestResult::Error(err) => {
                     error!("Error while trying to digest path: {}", err);
                 }
             }
@@ -158,11 +158,11 @@ fn worker(stealer: deque::Stealer<DigestJob>, tx: Sender<DigestJobResult>) {
         let result = match File::open(& *path) {
             Ok(file) => {
                 let digest = hasher.hash_whole_file(file);
-                ResultSuccessful(digest)
+                DigestResult::Successful(digest)
             },
 
             Err(err) => {
-                ResultError(err)
+                DigestResult::Error(err)
             }
         };
 
