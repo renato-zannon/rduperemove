@@ -3,11 +3,11 @@ name = "rduperemove"
 version = "0.0.1"
 dependencies = [
  "btrfs 0.0.1",
- "docopt 0.6.8 (git+git://github.com/docopt/docopt.rs)",
- "docopt_macros 0.6.5 (git+git://github.com/docopt/docopt.rs)",
+ "docopt 0.6.12 (git+git://github.com/docopt/docopt.rs)",
+ "docopt_macros 0.6.12 (git+git://github.com/docopt/docopt.rs)",
  "fiemap 0.0.1",
  "ioctl 0.0.1",
- "rust-crypto 0.1.0 (git+git://github.com/DaGenix/rust-crypto)",
+ "rust-crypto 0.1.2 (git+git://github.com/DaGenix/rust-crypto)",
 ]
 
 [[package]]
@@ -19,15 +19,15 @@ dependencies = [
 
 [[package]]
 name = "docopt"
-version = "0.6.8"
-source = "git+git://github.com/docopt/docopt.rs#0b184b15ed5ea7e3c180b088e8f99baa4427f989"
+version = "0.6.12"
+source = "git+git://github.com/docopt/docopt.rs#938d640720d91529252adddc79d020714cba7346"
 
 [[package]]
 name = "docopt_macros"
-version = "0.6.5"
-source = "git+git://github.com/docopt/docopt.rs#0b184b15ed5ea7e3c180b088e8f99baa4427f989"
+version = "0.6.12"
+source = "git+git://github.com/docopt/docopt.rs#938d640720d91529252adddc79d020714cba7346"
 dependencies = [
- "docopt 0.6.8 (git+git://github.com/docopt/docopt.rs)",
+ "docopt 0.6.12 (git+git://github.com/docopt/docopt.rs)",
 ]
 
 [[package]]
@@ -38,11 +38,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "gcc"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "ioctl"
 version = "0.0.1"
 
 [[package]]
 name = "rust-crypto"
+version = "0.1.2"
+source = "git+git://github.com/DaGenix/rust-crypto#6db220556dc640cc52180033f04fb28d768f96e5"
+dependencies = [
+ "time 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "time"
 version = "0.1.0"
-source = "git+git://github.com/DaGenix/rust-crypto#942e60ec3281ee83b6dc1fdcf7a71d21436bcda9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "gcc 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
