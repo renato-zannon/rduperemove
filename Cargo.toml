@@ -22,6 +22,9 @@ git = "git://github.com/docopt/docopt.rs"
 [dependencies.rust-crypto]
 git = "git://github.com/DaGenix/rust-crypto"
 
+[dependencies.deque]
+git = "git://github.com/kinghajj/deque"
+
 [[bin]]
 name = "rduperemove"
 path = "src/main.rs"

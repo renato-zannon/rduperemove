@@ -20,6 +20,7 @@ pub unsafe fn fiemap_ioctl(fd: c_int, map: &mut fiemap) -> IoResult<int> {
 }
 
 #[repr(C)]
+#[allow(missing_copy_implementations)]
 pub struct fiemap_extent {
     /* logical offset in bytes for the start of the extent from the beginning of the file */
     fe_logical: u64,
@@ -93,7 +94,7 @@ pub mod flags {
 
             const COMPAT = SYNC.bits | XATTR.bits
         }
-    )
+    );
 }
 
 pub mod extent_flags {
@@ -132,7 +133,7 @@ pub mod extent_flags {
             /* Space shared with other files. */
             const SHARED = 0x00002000
         }
-    )
+    );
 }
 
 pub struct FiemapRequest {

@@ -5,7 +5,8 @@ extern crate serialize;
 extern crate docopt;
 
 extern crate btrfs;
-extern crate "rust-crypto" as crypto;
+extern crate crypto;
+extern crate deque;
 
 #[phase(plugin, link)] extern crate log;
 #[phase(plugin)] extern crate docopt_macros;
@@ -38,7 +39,7 @@ Options:
     -w <count>, --worker-count <count>  Number of workers threads to use [default: 4]
     -s <size>, --min-file-size <size>   Minimum file size to consider for deduplication [default: 4096]
     -h, --help                          Show this message
-", flag_min_file_size: uint, flag_worker_count: uint)
+", flag_min_file_size: uint, flag_worker_count: uint);
 
 fn main() {
     // hacky way to set up the default logging level. See

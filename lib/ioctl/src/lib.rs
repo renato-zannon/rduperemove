@@ -35,7 +35,7 @@ extern "C" {
 }
 
 #[macro_export]
-macro_rules! ioctl(
+macro_rules! ioctl {
     ($fd:expr, $command:expr, $($arg:expr),+) => (
         {
             let result = ioctl::ioctl($fd, $command, $($arg),+) as int;
@@ -47,4 +47,4 @@ macro_rules! ioctl(
             }
         }
     )
-)
+}

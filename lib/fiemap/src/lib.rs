@@ -26,14 +26,14 @@ pub fn compare(file1: &File, file2: &File) -> ComparisonResult {
             (extents1.slice_to(1), None)
         } else {
             let last_index = extents1.len() - 1;
-            (extents1.slice_to(last_index), Some(extents1[last_index]))
+            (extents1.slice_to(last_index), Some(& extents1[last_index]))
         };
 
         let (init2, last2) = if extents2.len() == 1 {
             (extents2.slice_to(1), None)
         } else {
             let last_index = extents2.len() - 1;
-            (extents2.slice_to(last_index), Some(extents2[last_index]))
+            (extents2.slice_to(last_index), Some(& extents2[last_index]))
         };
 
         (init1 == init2, last1 == last2)
@@ -48,7 +48,7 @@ pub fn compare(file1: &File, file2: &File) -> ComparisonResult {
     }
 }
 
-#[deriving(Show, PartialEq, Eq)]
+#[deriving(Show, PartialEq, Eq, Copy)]
 pub enum ComparisonResult {
     AlreadyDeduped,
     PartiallyDeduped,

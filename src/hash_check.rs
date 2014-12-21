@@ -1,17 +1,17 @@
 use filehasher;
 
-use std::collections::TreeMap;
+use std::collections::BTreeMap;
 use std::collections::VecMap;
 
 use std::sync::Arc;
-use std::sync::deque::{mod, BufferPool};
+use deque::{mod, BufferPool};
 use std::io::{IoError, File};
 
 const BUFFER_SIZE:  uint = 64 * 1024;
 
 struct SizeGroup {
     paths: Vec<Arc<Path>>,
-    paths_per_digest: TreeMap<Vec<u8>, Vec<uint>>,
+    paths_per_digest: BTreeMap<Vec<u8>, Vec<uint>>,
     remaining: uint,
 }
 
@@ -35,7 +35,7 @@ pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Arc<Path>>>
 {
     let (results_tx, results_rx) = channel();
 
-    spawn(proc() {
+    spawn(move || {
         let (job_results_tx, job_results_rx) = channel();
 
         let pool = BufferPool::new();
@@ -47,7 +47,7 @@ pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Arc<Path>>>
             let stealer = stealer.clone();
             let worker_job_results_tx = job_results_tx.clone();
 
-            spawn(proc() worker(stealer, worker_job_results_tx));
+            spawn(move || worker(stealer, worker_job_results_tx));
         }
         drop(job_results_tx);
 
@@ -136,7 +136,7 @@ fn seed_workers<Iter>(worker: deque::Worker<DigestJob>, iter: Iter) -> VecMap<Si
         let group = SizeGroup {
             remaining: paths.len(),
             paths: paths,
-            paths_per_digest: TreeMap::new()
+            paths_per_digest: BTreeMap::new()
         };
 
         (group_id, group)
