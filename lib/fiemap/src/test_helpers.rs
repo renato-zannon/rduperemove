@@ -1,8 +1,8 @@
-use std::rt::rtio::{mod, RtioFileStream};
-use native::io::file::{mod, FileDesc};
+use std::rt::rtio::{self, RtioFileStream};
+use native::io::file::{self, FileDesc};
 use std::io::TempDir;
 use std::os;
-use std::rand::{mod, Rng};
+use std::rand::{self, Rng};
 
 pub struct TestTempFile<'a> {
     name: &'a str,

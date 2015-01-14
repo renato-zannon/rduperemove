@@ -25,7 +25,7 @@ pub struct btrfs_ioctl_same_args {
     pub dest_count:     u16,  /* in - total elements in info array */
     _reserved1:         u16,
     _reserved2:         u32,
-    info:               [btrfs_ioctl_same_extent_info, ..0],
+    info:               [btrfs_ioctl_same_extent_info; 0],
 }
 
 #[repr(C)]

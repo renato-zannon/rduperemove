@@ -1,36 +1,36 @@
 use std::collections::{HashMap, HashSet, BinaryHeap};
-use std::collections::hash_map::{Occupied, Vacant};
+use std::collections::hash_map::Entry;
 
 use std::sync::Arc;
 use std::io::{FileType, IoResult, IoError, FileStat};
 use std::io::fs::PathExtensions;
-use std::{vec, io, iter};
+use std::io;
 
 pub struct SizeCheck {
-    min_size: uint,
-    groups:   HashMap<uint, Vec<StatedPath>>
+    min_size: usize,
+    groups:   HashMap<usize, Vec<StatedPath>>
 }
 
-pub fn new_check(min_size: uint) -> SizeCheck {
+pub fn new_check(min_size: usize) -> SizeCheck {
     SizeCheck { groups: HashMap::new(), min_size: min_size }
 }
 
 impl SizeCheck {
     #[must_use]
-    pub fn add_base_dir(&mut self, dir: Arc<Path>, on_err: |IoError|) -> IoResult<()> {
+    pub fn add_base_dir<F: FnMut(IoError)>(&mut self, dir: Arc<Path>, mut on_err: F) -> IoResult<()> {
         for file in try!(recurse_directory(&dir)) {
             match file {
                 Ok(stated_path) => {
-                    let size = stated_path.stat.size as uint;
+                    let size = stated_path.stat.size as usize;
 
                     if size < self.min_size { continue; }
 
                     match self.groups.entry(size) {
-                        Vacant(entry) => {
-                            entry.set(vec!(stated_path));
+                        Entry::Vacant(entry) => {
+                            entry.insert(vec!(stated_path));
                         },
 
-                        Occupied(entry) => {
+                        Entry::Occupied(entry) => {
                             entry.into_mut().push(stated_path);
                         },
                     };
@@ -48,24 +48,26 @@ impl SizeCheck {
     pub fn size_groups(self) -> SizeGroups {
         let sizes = self.groups.keys()
             .map(|n| *n)
-            .collect::<BinaryHeap<uint>>()
+            .collect::<BinaryHeap<usize>>()
             .into_sorted_vec();
 
         SizeGroups {
-            sorted_sizes_iter: sizes.into_iter().rev(),
+            sorted_sizes_iter: sizes,
             size_groups: self.groups,
         }
     }
 }
 
 pub struct SizeGroups {
-    sorted_sizes_iter: iter::Rev<vec::MoveItems<uint>>,
-    size_groups: HashMap<uint, Vec<StatedPath>>
+    sorted_sizes_iter: Vec<usize>,
+    size_groups: HashMap<usize, Vec<StatedPath>>
 }
 
-impl<'a> Iterator<Vec<Arc<Path>>> for SizeGroups {
+impl Iterator for SizeGroups {
+    type Item = Vec<Arc<Path>>;
+
     fn next(&mut self) -> Option<Vec<Arc<Path>>> {
-        for size in self.sorted_sizes_iter {
+        for size in self.sorted_sizes_iter.drain().rev() {
             let stated_paths = self.size_groups.remove(&size).unwrap();
             let unique_stated_paths = remove_repeated_inodes(stated_paths);
 
@@ -119,7 +121,9 @@ struct StatedPath {
     stat: FileStat,
 }
 
-impl<'a> Iterator<IoResult<StatedPath>> for FilesBelow {
+impl Iterator for FilesBelow {
+    type Item = IoResult<StatedPath>;
+
     fn next(&mut self) -> Option<IoResult<StatedPath>> {
         use std::io::fs;
 

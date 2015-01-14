@@ -3,25 +3,28 @@ use filehasher;
 use std::collections::BTreeMap;
 use std::collections::VecMap;
 
+use std::thread::Thread;
 use std::sync::Arc;
-use deque::{mod, BufferPool};
+use std::sync::mpsc::{channel, Receiver, Sender};
+
+use deque::{self, BufferPool};
 use std::io::{IoError, File};
 
-const BUFFER_SIZE:  uint = 64 * 1024;
+const BUFFER_SIZE:  usize = 64 * 1024;
 
 struct SizeGroup {
     paths: Vec<Arc<Path>>,
-    paths_per_digest: BTreeMap<Vec<u8>, Vec<uint>>,
-    remaining: uint,
+    paths_per_digest: BTreeMap<Vec<u8>, Vec<usize>>,
+    remaining: usize,
 }
 
 struct DigestJob {
-    id: (uint, uint),
+    id: (usize, usize),
     path: Arc<Path>,
 }
 
 struct DigestJobResult {
-    id: (uint, uint),
+    id: (usize, usize),
     result: DigestResult,
 }
 
@@ -30,12 +33,12 @@ enum DigestResult {
     Error(IoError),
 }
 
-pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Arc<Path>>>
-    where Iter: Iterator<Vec<Arc<Path>>> + Send
+pub fn spawn_workers<Iter>(count: usize, iter: Iter) -> Receiver<Vec<Arc<Path>>>
+    where Iter: Iterator<Item = Vec<Arc<Path>>> + Send
 {
     let (results_tx, results_rx) = channel();
 
-    spawn(move || {
+    Thread::spawn(move || {
         let (job_results_tx, job_results_rx) = channel();
 
         let pool = BufferPool::new();
@@ -43,11 +46,11 @@ pub fn spawn_workers<Iter>(count: uint, iter: Iter) -> Receiver<Vec<Arc<Path>>>
 
         let size_groups = seed_workers(w, iter);
 
-        for _ in range(0, count) {
+        for _ in (0..count) {
             let stealer = stealer.clone();
             let worker_job_results_tx = job_results_tx.clone();
 
-            spawn(move || worker(stealer, worker_job_results_tx));
+            Thread::spawn(move || worker(stealer, worker_job_results_tx));
         }
         drop(job_results_tx);
 
@@ -110,14 +113,14 @@ fn listen_for_responses(
                     group.paths[path_id].clone()
                 }).collect();
 
-                results_tx.send(paths);
+                results_tx.send(paths).unwrap();
             }
         }
     }
 }
 
 fn seed_workers<Iter>(worker: deque::Worker<DigestJob>, iter: Iter) -> VecMap<SizeGroup>
-    where Iter: Iterator<Vec<Arc<Path>>> + Send
+    where Iter: Iterator<Item = Vec<Arc<Path>>> + Send
 {
     let mut size_groups: VecMap<SizeGroup>;
 
@@ -166,6 +169,6 @@ fn worker(stealer: deque::Stealer<DigestJob>, tx: Sender<DigestJobResult>) {
             }
         };
 
-        tx.send(DigestJobResult { id: id, result: result });
+        tx.send(DigestJobResult { id: id, result: result }).unwrap();
     }
 }

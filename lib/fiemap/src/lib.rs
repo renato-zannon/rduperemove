@@ -1,8 +1,7 @@
-#![feature(phase, globs)]
-
 extern crate libc;
 
-#[phase(plugin, link)] extern crate ioctl;
+#[macro_use]
+extern crate ioctl;
 
 use std::io::File;
 use std::os::unix::prelude::*;
@@ -48,7 +47,7 @@ pub fn compare(file1: &File, file2: &File) -> ComparisonResult {
     }
 }
 
-#[deriving(Show, PartialEq, Eq, Copy)]
+#[derive(Show, PartialEq, Eq, Copy)]
 pub enum ComparisonResult {
     AlreadyDeduped,
     PartiallyDeduped,
@@ -59,7 +58,7 @@ pub enum ComparisonResult {
 mod tests {
     use test_helpers::TestTempFile;
     use std::io::Command;
-    use native::io::file::{mod, FileDesc};
+    use native::io::file::{self, FileDesc};
     use std::rt::rtio;
     use super::{compare, AlreadyDeduped, NotDeduped};
 

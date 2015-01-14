@@ -1,15 +1,18 @@
 #![crate_name = "rduperemove"]
-#![feature(macro_rules, phase)]
+#![feature(plugin)]
 
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
 
 extern crate btrfs;
 extern crate crypto;
 extern crate deque;
 
-#[phase(plugin, link)] extern crate log;
-#[phase(plugin)] extern crate docopt_macros;
+#[macro_use]
+extern crate log;
+
+#[plugin] #[no_link]
+extern crate docopt_macros;
 
 use std::io::{IoError, stdio};
 use std::os;
@@ -19,12 +22,12 @@ mod filehasher;
 mod size_check;
 mod hash_check;
 
-const MIN_FILE_SIZE: uint = 4 * 1024;
+const MIN_FILE_SIZE: usize = 4 * 1024;
 
 struct Configuration {
     base_dirs:     Vec<Path>,
-    worker_count:  uint,
-    min_file_size: uint,
+    worker_count:  usize,
+    min_file_size: usize,
 }
 
 docopt!(CommandLineOptions, "
@@ -39,7 +42,7 @@ Options:
     -w <count>, --worker-count <count>  Number of workers threads to use [default: 4]
     -s <size>, --min-file-size <size>   Minimum file size to consider for deduplication [default: 4096]
     -h, --help                          Show this message
-", flag_min_file_size: uint, flag_worker_count: uint);
+", flag_min_file_size: usize, flag_worker_count: usize);
 
 fn main() {
     // hacky way to set up the default logging level. See
@@ -61,20 +64,20 @@ fn main() {
 
         let source = paths.pop().unwrap();
 
-        let dedup  = btrfs::new_dedup(source, paths.as_slice());
+        let dedup  = btrfs::new_dedup(source, &paths[]);
         let deduped = dedup.perform();
 
         println!("Deduped {} bytes\n", deduped);
     }
 }
 
-fn create_size_check(base_dirs: Vec<Path>, min_file_size: uint) -> size_check::SizeCheck {
+fn create_size_check(base_dirs: Vec<Path>, min_file_size: usize) -> size_check::SizeCheck {
     let mut check = size_check::new_check(min_file_size);
 
     for base_dir in base_dirs.into_iter() {
         let mut stderr = stdio::stderr();
 
-        let on_err = |err: IoError| {
+        let on_err = move |&mut: err: IoError| {
             (writeln!(&mut stderr, "WARNING: {}", err)).unwrap();
         };
 

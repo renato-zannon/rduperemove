@@ -1,9 +1,9 @@
-#![feature(phase, globs)]
-
 extern crate libc;
 
-#[phase(plugin, link)] extern crate ioctl;
-#[phase(plugin, link)] extern crate log;
+#[macro_use]
+extern crate ioctl;
+#[macro_use]
+extern crate log;
 
 use std::io::{File, FileMode, FileAccess};
 use std::sync::Arc;
@@ -26,7 +26,7 @@ pub fn new_dedup<'a>(source: Arc<Path>, destinations: &'a [Arc<Path>]) -> Dedup<
 
 impl<'a> Dedup<'a> {
     pub fn perform(self) -> uint {
-        let mut source_file = {
+        let source_file = {
             match File::open(&*self.source) {
                 Ok(file) => file,
                 Err(..)  => panic!("Couldn't open file {} for reading", self.source.display()),

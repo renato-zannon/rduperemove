@@ -30,11 +30,11 @@ pub struct fiemap_extent {
 
     /* length in bytes for this extent */
     fe_length: u64,
-    fe_reserved64: [u64, ..2],
+    fe_reserved64: [u64; 2],
 
     /* FIEMAP_EXTENT_* flags for this extent */
     fe_flags: u32,
-    fe_reserved: [u32, ..3],
+    fe_reserved: [u32; 3],
 }
 
 impl fiemap_extent {
@@ -71,7 +71,7 @@ pub struct fiemap {
     pub fm_reserved: u32,
 
     /* array of mapped extents (out) */
-    pub fm_extents: [fiemap_extent, ..0],
+    pub fm_extents: [fiemap_extent; 0],
 }
 
 impl fiemap {
