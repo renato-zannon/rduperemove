@@ -3,6 +3,9 @@ extern crate libc;
 #[macro_use]
 extern crate ioctl;
 
+#[macro_use]
+extern crate bitflags;
+
 use std::io::File;
 use std::os::unix::prelude::*;
 use bindings::FiemapRequest;
