@@ -25,17 +25,17 @@ pub fn compare(file1: &File, file2: &File) -> ComparisonResult {
 
     let (inits_match, lasts_match) = {
         let (init1, last1) = if extents1.len() == 1 {
-            (extents1.slice_to(1), None)
+            (&extents1[..1], None)
         } else {
             let last_index = extents1.len() - 1;
-            (extents1.slice_to(last_index), Some(& extents1[last_index]))
+            (&extents1[..last_index], Some(& extents1[last_index]))
         };
 
         let (init2, last2) = if extents2.len() == 1 {
-            (extents2.slice_to(1), None)
+            (&extents2[..1], None)
         } else {
             let last_index = extents2.len() - 1;
-            (extents2.slice_to(last_index), Some(& extents2[last_index]))
+            (&extents2[..last_index], Some(& extents2[last_index]))
         };
 
         (init1 == init2, last1 == last2)
@@ -69,11 +69,11 @@ mod tests {
     fn test_detects_different_files_with_same_content() {
         let content = "foo bar baz".repeat(1_000);
 
-        let result1 = TestTempFile::new("file1").content(content.as_slice()).create();
+        let result1 = TestTempFile::new("file1").content(&content[]).create();
 
         let result2 = TestTempFile::new("file2")
             .directory(result1.dir_path.clone())
-            .content(content.as_slice())
+            .content(&content[])
             .create();
 
         sync();

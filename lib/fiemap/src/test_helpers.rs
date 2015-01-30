@@ -54,7 +54,7 @@ impl<'a> TestTempFile<'a> {
                 let mut rng = rand::task_rng();
                 let mut buffer = [0u8, ..(4096 * 4)];
 
-                rng.fill_bytes(buffer.as_mut_slice());
+                rng.fill_bytes(&mut buffer[]);
 
                 rtio_file.write(buffer).ok().unwrap()
             },
