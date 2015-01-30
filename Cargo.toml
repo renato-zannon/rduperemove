@@ -19,6 +19,7 @@ docopt_macros = "*"
 rust-crypto = "*"
 deque = "*"
 rustc-serialize = "*"
+log = "*"
 
 [[bin]]
 name = "rduperemove"
