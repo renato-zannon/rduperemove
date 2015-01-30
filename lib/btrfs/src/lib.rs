@@ -5,7 +5,7 @@ extern crate ioctl;
 #[macro_use]
 extern crate log;
 
-use std::io::{File, FileMode, FileAccess};
+use std::old_io::{File, FileMode, FileAccess};
 use std::sync::Arc;
 use std::os::unix::prelude::*;
 

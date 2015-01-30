@@ -6,7 +6,7 @@ extern crate ioctl;
 #[macro_use]
 extern crate bitflags;
 
-use std::io::File;
+use std::old_io::File;
 use std::os::unix::prelude::*;
 use bindings::FiemapRequest;
 
@@ -60,8 +60,8 @@ pub enum ComparisonResult {
 #[cfg(test)]
 mod tests {
     use test_helpers::TestTempFile;
-    use std::io::Command;
-    use native::io::file::{self, FileDesc};
+    use std::old_io::Command;
+    use native::old_io::file::{self, FileDesc};
     use std::rt::rtio;
     use super::{compare, AlreadyDeduped, NotDeduped};
 

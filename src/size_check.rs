@@ -2,9 +2,9 @@ use std::collections::{HashMap, HashSet, BinaryHeap};
 use std::collections::hash_map::Entry;
 
 use std::sync::Arc;
-use std::io::{FileType, IoResult, IoError, FileStat};
-use std::io::fs::PathExtensions;
-use std::io;
+use std::old_io::{FileType, IoResult, IoError, FileStat};
+use std::old_io::fs::PathExtensions;
+use std::old_io;
 
 pub struct SizeCheck {
     min_size: usize,
@@ -104,7 +104,7 @@ fn recurse_directory(dir: &Arc<Path>) -> IoResult<FilesBelow> {
         FileType::Directory => Ok(FilesBelow { stack: vec!(dir.clone()) }),
         _  => {
             Err(IoError {
-                kind: io::MismatchedFileTypeForOperation,
+                kind: old_io::MismatchedFileTypeForOperation,
                 desc: "Not a directory!",
                 detail: Some(format!("{}", dir.display())),
             })
@@ -125,7 +125,7 @@ impl Iterator for FilesBelow {
     type Item = IoResult<StatedPath>;
 
     fn next(&mut self) -> Option<IoResult<StatedPath>> {
-        use std::io::fs;
+        use std::old_io::fs;
 
         loop {
             let current = match self.stack.pop() {

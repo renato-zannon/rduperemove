@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 use deque::{self, BufferPool};
-use std::io::{IoError, File};
+use std::old_io::{IoError, File};
 
 const BUFFER_SIZE:  usize = 64 * 1024;
 

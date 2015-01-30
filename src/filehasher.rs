@@ -1,7 +1,7 @@
 use crypto::digest::Digest;
 use crypto::md5::Md5;
 
-use std::io::{File, IoError, EndOfFile};
+use std::old_io::{File, IoError, EndOfFile};
 use std::iter;
 
 pub struct FileHasher {

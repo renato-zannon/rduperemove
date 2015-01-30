@@ -1,6 +1,6 @@
 use std::rt::rtio::{self, RtioFileStream};
-use native::io::file::{self, FileDesc};
-use std::io::TempDir;
+use native::old_io::file::{self, FileDesc};
+use std::old_io::TempDir;
 use std::os;
 use std::rand::{self, Rng};
 

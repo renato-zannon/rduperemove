@@ -2,7 +2,7 @@ use ioctl;
 use std::{raw, mem, ptr, u64};
 use std::rt::heap;
 use libc::c_int;
-use std::io::IoResult;
+use std::old_io::IoResult;
 
 pub use self::flags::Flags as FiemapFlags;
 pub use self::extent_flags::ExtentFlags;

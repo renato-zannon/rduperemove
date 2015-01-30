@@ -41,7 +41,7 @@ macro_rules! ioctl {
             let result = ioctl::ioctl($fd, $command, $($arg),+) as int;
 
             if result < 0 {
-                Err(::std::io::IoError::last_error())
+                Err(::std::old_io::IoError::last_error())
             } else {
                 Ok(result)
             }

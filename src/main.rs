@@ -14,7 +14,7 @@ extern crate log;
 #[plugin] #[no_link]
 extern crate docopt_macros;
 
-use std::io::{IoError, stdio};
+use std::old_io::{IoError, stdio};
 use std::os;
 use std::sync::Arc;
 

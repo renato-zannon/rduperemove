@@ -2,7 +2,7 @@ use std::mem;
 use std::rt::heap;
 use std::{raw, ptr};
 use libc::c_int;
-use std::io::IoResult;
+use std::old_io::IoResult;
 use ioctl;
 
 const BTRFS_IOCTL_MAGIC: i32 = 0x94;
