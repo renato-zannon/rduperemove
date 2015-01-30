@@ -1,3 +1,5 @@
+#![feature(libc, alloc, hash)]
+
 extern crate libc;
 
 #[macro_use]

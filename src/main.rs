@@ -1,5 +1,6 @@
 #![crate_name = "rduperemove"]
 #![feature(plugin)]
+#![feature(io, os, collections, path)]
 
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;

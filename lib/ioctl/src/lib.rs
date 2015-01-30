@@ -1,4 +1,4 @@
-#![feature(macro_rules)]
+#![feature(libc)]
 
 extern crate libc;
 
