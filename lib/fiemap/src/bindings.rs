@@ -9,7 +9,7 @@ pub use self::extent_flags::ExtentFlags;
 
 const FIEMAP_IOCTL_MAGIC: i32 = 'f' as i32;
 
-pub unsafe fn fiemap_ioctl(fd: c_int, map: &mut fiemap) -> IoResult<int> {
+pub unsafe fn fiemap_ioctl(fd: c_int, map: &mut fiemap) -> IoResult<isize> {
     let fiemap_command = ioctl::iowr(
         FIEMAP_IOCTL_MAGIC,
         11,
@@ -138,7 +138,7 @@ pub mod extent_flags {
 
 pub struct FiemapRequest {
     allocation: *mut u8,
-    allocation_size: uint,
+    allocation_size: usize,
 }
 
 impl FiemapRequest {
@@ -155,7 +155,7 @@ impl FiemapRequest {
             // Ask the FS how many extents there are
             try!(fiemap_ioctl(fd, map));
 
-            let extent_count = map.fm_mapped_extents as uint;
+            let extent_count = map.fm_mapped_extents as usize;
 
             let alloc_size = mem::size_of::<fiemap>() +
                 extent_count * mem::size_of::<fiemap_extent>();
@@ -173,7 +173,7 @@ impl FiemapRequest {
             map.fm_extent_count = extent_count as u32;
             map.fm_mapped_extents = 0;
 
-            let extents_ptr = alloc.offset(mem::size_of::<fiemap>() as int) as *mut fiemap_extent;
+            let extents_ptr = alloc.offset(mem::size_of::<fiemap>() as isize) as *mut fiemap_extent;
             ptr::zero_memory(extents_ptr, extent_count);
 
             try!(fiemap_ioctl(fd, map));
@@ -191,8 +191,8 @@ impl FiemapRequest {
 
     pub fn extents(&mut self) -> &mut [fiemap_extent] {
         unsafe {
-            let extents_ptr = self.allocation.offset(mem::size_of::<fiemap>() as int);
-            let count = self.fiemap().fm_extent_count as uint;
+            let extents_ptr = self.allocation.offset(mem::size_of::<fiemap>() as isize);
+            let count = self.fiemap().fm_extent_count as usize;
 
             mem::transmute(raw::Slice {
                 data: extents_ptr as *const fiemap_extent,

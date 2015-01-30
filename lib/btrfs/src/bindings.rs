@@ -8,7 +8,7 @@ use ioctl;
 const BTRFS_IOCTL_MAGIC: i32 = 0x94;
 
 #[inline]
-pub unsafe fn btrfs_extent_same(fd: c_int, same: &mut btrfs_ioctl_same_args) -> IoResult<int> {
+pub unsafe fn btrfs_extent_same(fd: c_int, same: &mut btrfs_ioctl_same_args) -> IoResult<isize> {
     let btrfs_ioc_file_extent_same = ioctl::iowr(
         BTRFS_IOCTL_MAGIC,
         54,
@@ -48,7 +48,7 @@ pub struct ExtentSame {
 }
 
 impl ExtentSame {
-    pub fn new(info_count: uint) -> ExtentSame {
+    pub fn new(info_count: usize) -> ExtentSame {
         let args_size  = ExtentSame::args_size();
         let infos_size = ExtentSame::infos_size(info_count);
 
@@ -60,7 +60,7 @@ impl ExtentSame {
             );
 
             let args_ptr  = allocation as *mut btrfs_ioctl_same_args;
-            let infos_ptr = allocation.offset(args_size as int) as *mut btrfs_ioctl_same_extent_info;
+            let infos_ptr = allocation.offset(args_size as isize) as *mut btrfs_ioctl_same_extent_info;
 
             ptr::write(args_ptr, btrfs_ioctl_same_args {
                 logical_offset: 0,
@@ -84,8 +84,8 @@ impl ExtentSame {
     pub fn infos(&mut self) -> &mut [btrfs_ioctl_same_extent_info] {
         unsafe {
             let args_size = ExtentSame::args_size();
-            let infos_ptr = self.allocation.offset(args_size as int);
-            let info_count = self.args().dest_count as uint;
+            let infos_ptr = self.allocation.offset(args_size as isize);
+            let info_count = self.args().dest_count as usize;
 
             mem::transmute(raw::Slice {
                 data: infos_ptr as *const btrfs_ioctl_same_extent_info,
@@ -94,16 +94,16 @@ impl ExtentSame {
         }
     }
 
-    fn allocation_size(&mut self) -> uint {
+    fn allocation_size(&mut self) -> usize {
         ExtentSame::args_size() +
-            ExtentSame::infos_size(self.args().dest_count as uint)
+            ExtentSame::infos_size(self.args().dest_count as usize)
     }
 
-    fn args_size() -> uint {
+    fn args_size() -> usize {
         mem::size_of::<btrfs_ioctl_same_args>()
     }
 
-    fn infos_size(count: uint) -> uint {
+    fn infos_size(count: usize) -> usize {
         count * mem::size_of::<btrfs_ioctl_same_extent_info>()
     }
 }

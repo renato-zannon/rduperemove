@@ -25,7 +25,7 @@ pub fn new_dedup<'a>(source: Arc<Path>, destinations: &'a [Arc<Path>]) -> Dedup<
 }
 
 impl<'a> Dedup<'a> {
-    pub fn perform(self) -> uint {
+    pub fn perform(self) -> usize {
         let source_file = {
             match File::open(&*self.source) {
                 Ok(file) => file,
@@ -57,7 +57,7 @@ impl<'a> Dedup<'a> {
             info.logical_offset = 0;
         }
 
-        let mut total_dedup = 0u;
+        let mut total_dedup = 0us;
 
         loop {
             let errored = unsafe {
@@ -76,7 +76,7 @@ impl<'a> Dedup<'a> {
             let offset = same.infos()[0].bytes_deduped;
             assert!(same.infos().tail().iter().all(|info| info.bytes_deduped == offset));
 
-            total_dedup += (offset as uint) * dest_count;
+            total_dedup += (offset as usize) * dest_count;
 
             if same.args().length < offset || offset == 0 { break; }
 
