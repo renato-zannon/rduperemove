@@ -78,7 +78,7 @@ fn create_size_check(base_dirs: Vec<Path>, min_file_size: usize) -> size_check::
     for base_dir in base_dirs.into_iter() {
         let mut stderr = stdio::stderr();
 
-        let on_err = move |&mut: err: IoError| {
+        let on_err = move |err: IoError| {
             (writeln!(&mut stderr, "WARNING: {}", err)).unwrap();
         };
 
